@@ -1,27 +1,39 @@
+/*
+Copyright © 2024 Intuit Inc.
+*/
 package cmd
 
 import (
-	"context"
-	"flag"
-	"fmt"
 	"github.com/spf13/cobra"
+	"os"
 )
 
-var (
-	ctx, cancel = context.WithCancel(context.Background())
-)
+// rootCmd represents the base command when called without any subcommands
+var rootCmd = &cobra.Command{
+	Use:   "admiral-sharding-manager",
+	Short: "Sharding manager distributes load among admiral operators",
+	Long:  "Sharding manager distributes load among admiral operators",
+}
 
-// GetRootCmd returns the root of the cobra command-tree.
-func GetRootCmd(args []string) *cobra.Command {
-	rootCmd := &cobra.Command{
-		Use:   "admiral_sharding_managersr",
-		Short: "Admiral Sharding Manager is a load distributor",
-		Long:  "Admiral Sharding Manager manages load distribution among admiral operators",
-		Run: func(cmd *cobra.Command, args []string) {
-			fmt.Print("Admiral Sharding Manager")
-		},
+// Execute adds all child commands to the root command and sets flags appropriately.
+// This is called by main.main(). It only needs to happen once to the rootCmd.
+func Execute() {
+	err := rootCmd.Execute()
+	if err != nil {
+		os.Exit(1)
 	}
-	rootCmd.SetArgs(args)
-	rootCmd.PersistentFlags().AddGoFlagSet(flag.CommandLine)
-	return rootCmd
+}
+
+var identifier string
+
+func init() {
+	// Here you will define your flags and configuration settings.
+	// Cobra supports persistent flags, which, if defined here,
+	// will be global for your application.
+
+	// rootCmd.PersistentFlags().StringVar(&cfgFile, "config", "", "config file (default is $HOME/.admiral-state-syncer.yaml)")
+
+	// Cobra also supports local flags, which will only run
+	// when this action is called directly.
+	rootCmd.Flags().StringVar(&identifier, "identifier", "devx", "Identifier for sharding manager instance")
 }

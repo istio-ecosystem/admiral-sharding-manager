@@ -1,15 +1,10 @@
+/*
+Copyright © 2024 Intuit Inc
+*/
 package main
 
-import (
-	"github.com/istio-ecosystem/admiral-sharding-manager/cmd"
-	"os"
-)
+import "github.com/istio-ecosystem/admiral-sharding-manager/cmd"
 
 func main() {
-	rootCmd := cmd.GetRootCmd(os.Args[1:])
-
-	err := rootCmd.Execute()
-	if err != nil {
-		os.Exit(-1)
-	}
+	cmd.Execute()
 }
