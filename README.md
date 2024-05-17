@@ -1,0 +1,2 @@
+# admiral-sharding-manager
+Admiral sharding manager manages distribution of load between admiral operators, which in turn will process istio resource required for services to communicate over service mesh
