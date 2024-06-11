@@ -4,7 +4,7 @@ import (
 	"context"
 	typeV1 "github.com/istio-ecosystem/admiral-api/pkg/apis/admiral/v1"
 	"github.com/istio-ecosystem/admiral-sharding-manager/pkg/model"
-	"github.com/sirupsen/logrus"
+	log "github.com/sirupsen/logrus"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
@@ -31,7 +31,7 @@ func (sh ShardHandler) CreateOrUpdateShard(ctx context.Context, shard *typeV1.Sh
 	shard = buildShardResource(ctx)
 	updatedShard, err := sh.Config.AdmiralApiClient.Shards(sh.ShardNamespace).Create(ctx, shard, metav1.CreateOptions{})
 	if err != nil {
-		logrus.Error("failed to create or update shard resource")
+		log.Error("failed to create or update shard resource")
 	}
 	return updatedShard, err
 }
@@ -39,7 +39,7 @@ func (sh ShardHandler) CreateOrUpdateShard(ctx context.Context, shard *typeV1.Sh
 func (sh ShardHandler) DeleteShard(ctx context.Context, shard *typeV1.Shard) error {
 	err := sh.Config.AdmiralApiClient.Shards(sh.ShardNamespace).Delete(ctx, shard.Name, metav1.DeleteOptions{})
 	if err != nil {
-		logrus.Error("failed to delete shard resource")
+		log.Error("failed to delete shard resource")
 	}
 	return err
 }

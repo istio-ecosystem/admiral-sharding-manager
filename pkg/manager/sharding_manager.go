@@ -4,7 +4,7 @@ import (
 	"context"
 	"github.com/istio-ecosystem/admiral-sharding-manager/pkg/model"
 	"github.com/istio-ecosystem/admiral-sharding-manager/pkg/registry"
-	"github.com/sirupsen/logrus"
+	log "github.com/sirupsen/logrus"
 )
 
 func InitializeShardingManager(ctx context.Context, params *model.ShardingManagerParams) (*model.ShardingManagerConfig, error) {
@@ -16,7 +16,7 @@ func InitializeShardingManager(ctx context.Context, params *model.ShardingManage
 	kubeClient := KubeClient{}
 	smConfig.AdmiralApiClient, err = kubeClient.LoadAdmiralApiClientFromPath(params.KubeconfigPath)
 	if err != nil {
-		logrus.Error("failed to initialize admiral api client")
+		log.Error("failed to initialize admiral api client")
 	}
 	//setup registry client
 	smConfig.RegistryClient = registry.RegistryClient{}
@@ -27,7 +27,7 @@ func InitializeShardingManager(ctx context.Context, params *model.ShardingManage
 
 	err = LoadRegistryConfiguration(ctx, smConfig, params)
 	if err != nil {
-		logrus.Error("failed to initialize registry client")
+		log.Error("failed to initialize registry client")
 	}
 
 	return smConfig, err
