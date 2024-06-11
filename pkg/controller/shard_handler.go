@@ -9,35 +9,44 @@ import (
 )
 
 type ShardInteface interface {
-	CreateOrUpdateShard(ctx context.Context, shard *typeV1.Shard) (*typeV1.Shard, error)
-	DeleteShard(ctx context.Context, shard *typeV1.Shard) error
+	Create(ctx context.Context, shard *typeV1.Shard) (*typeV1.Shard, error)
+	Update(ctx context.Context, shard *typeV1.Shard) (*typeV1.Shard, error)
+	Delete(ctx context.Context, shard *typeV1.Shard) error
 }
 
-type ShardHandler struct {
-	Config         *model.ShardingManagerConfig
-	ShardNamespace string
+type shardHandler struct {
+	config         *model.ShardingManagerConfig
+	shardNamespace string
 }
 
-func NewShardHandler(ShardConfig *model.ShardingManagerConfig, namespace string) ShardHandler {
-	shardHandler := ShardHandler{
-		Config:         ShardConfig,
-		ShardNamespace: namespace,
+func NewShardHandler(ShardConfig *model.ShardingManagerConfig, namespace string) shardHandler {
+	shardHandler := shardHandler{
+		config:         ShardConfig,
+		shardNamespace: namespace,
 	}
 
 	return shardHandler
 }
 
-func (sh ShardHandler) CreateOrUpdateShard(ctx context.Context, shard *typeV1.Shard) (*typeV1.Shard, error) {
+func (sh *shardHandler) Create(ctx context.Context, shard *typeV1.Shard) (*typeV1.Shard, error) {
 	shard = buildShardResource(ctx)
-	updatedShard, err := sh.Config.AdmiralApiClient.Shards(sh.ShardNamespace).Create(ctx, shard, metav1.CreateOptions{})
+	updatedShard, err := sh.config.AdmiralApiClient.Shards(sh.shardNamespace).Create(ctx, shard, metav1.CreateOptions{})
 	if err != nil {
-		log.Error("failed to create or update shard resource")
+		log.Error("failed to create shard resource")
 	}
 	return updatedShard, err
 }
 
-func (sh ShardHandler) DeleteShard(ctx context.Context, shard *typeV1.Shard) error {
-	err := sh.Config.AdmiralApiClient.Shards(sh.ShardNamespace).Delete(ctx, shard.Name, metav1.DeleteOptions{})
+func (sh *shardHandler) Update(ctx context.Context, shard *typeV1.Shard) (*typeV1.Shard, error) {
+	updatedShard, err := sh.config.AdmiralApiClient.Shards(sh.shardNamespace).Update(ctx, shard, metav1.UpdateOptions{})
+	if err != nil {
+		log.Error("failed to update shard resource")
+	}
+	return updatedShard, err
+}
+
+func (sh *shardHandler) Delete(ctx context.Context, shard *typeV1.Shard) error {
+	err := sh.config.AdmiralApiClient.Shards(sh.shardNamespace).Delete(ctx, shard.Name, metav1.DeleteOptions{})
 	if err != nil {
 		log.Error("failed to delete shard resource")
 	}

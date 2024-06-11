@@ -15,14 +15,14 @@ import (
 	"k8s.io/client-go/tools/cache"
 )
 
-type ShardController struct {
-	KubernetesClientset kubernetes.Interface
-	Informer            cache.SharedIndexInformer
-	Mutex               sync.Mutex
-	ShardCache          map[string]*typeV1.Shard
+type shardController struct {
+	kubernetesClientset kubernetes.Interface
+	informer            cache.SharedIndexInformer
+	mutex               sync.Mutex
+	shardCache          map[string]*typeV1.Shard
 }
 
-func NewShardController(stopCh <-chan struct{}, crdClientSet clientset.Interface, kubernetesClientset kubernetes.Interface, resyncPeriod time.Duration) (*ShardController, error) {
+func NewShardController(stopCh <-chan struct{}, crdClientSet clientset.Interface, kubernetesClientset kubernetes.Interface, resyncPeriod time.Duration) (*shardController, error) {
 
 	informerFactory := informers.NewSharedInformerFactoryWithOptions(kubernetesClientset, resyncPeriod)
 	informerFactory.Start(stopCh)
@@ -56,10 +56,10 @@ func NewShardController(stopCh <-chan struct{}, crdClientSet clientset.Interface
 		},
 	})
 
-	return &ShardController{
-		Informer:            shardInformer,
-		KubernetesClientset: kubernetesClientset,
-		Mutex:               sync.Mutex{},
-		ShardCache:          make(map[string]*typeV1.Shard),
+	return &shardController{
+		informer:            shardInformer,
+		kubernetesClientset: kubernetesClientset,
+		mutex:               sync.Mutex{},
+		shardCache:          make(map[string]*typeV1.Shard),
 	}, nil
 }
