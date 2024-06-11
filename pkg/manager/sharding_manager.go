@@ -7,10 +7,6 @@ import (
 	"github.com/sirupsen/logrus"
 )
 
-var ClusterCache map[string]model.ClusterConfig
-
-var ShardClusters []*model.ClusterConfig
-
 func InitializeShardingManager(ctx context.Context, params *model.ShardingManagerParams) (*model.ShardingManagerConfig, error) {
 
 	smConfig := &model.ShardingManagerConfig{}
