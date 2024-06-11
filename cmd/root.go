@@ -30,19 +30,16 @@ func Execute() {
 }
 
 func init() {
-	// Here you will define your flags and configuration settings.
-	// Cobra supports persistent flags, which, if defined here,
-	// will be global for your application.
-
-	// Cobra also supports local flags, which will only run
-	// when this action is called directly.
-
 	smParams := model.ShardingManagerParams{}
 
 	rootCmd.PersistentFlags().StringVar(&smParams.KubeconfigPath, "kube_config", "", "Use a Kubernetes configuration file instead of in-cluster configuration")
-	rootCmd.Flags().StringVar(&smParams.ShardingManagerIdentity, "sharding-manager-identity", "devx", "Identity of the sharding manager instance")
-	rootCmd.Flags().StringVar(&smParams.OperatorIdentityLabel, "shard-workload-identity-label", "sharding.manager.io/shard-workload-identity", "label used to specify identity of workload for whome shard profile is defined")
-	rootCmd.Flags().StringVar(&smParams.ShardIdentityLabel, "shard-instance-identity-label", "sharding.manager.io/shard-instance-identity", "label used to specify identity of sharding manager instance")
+	//defines the identity of sharding manager instance - logical name for group of resources handled by an instance of sharding manager. This is used to initialize configuration for resources to be handled
+	rootCmd.Flags().StringVar(&smParams.ShardingManagerIdentity, "shard-identity", "devx", "Identity of the sharding manager instance")
+	//operator identity label which will be set on the shard crd. Using this label value operator will filter the shard it needs to monitor
+	rootCmd.Flags().StringVar(&smParams.OperatorIdentityLabel, "operator-identity-label", "sharding.manager.io/operator-identity", "label used to specify identity of operator for which shard profile is defined")
+	//shard identity label, value of which will be sharding manager instance identity. This is added on the shard crd to identity which sharding manager instance managed this shard crd.
+	rootCmd.Flags().StringVar(&smParams.ShardIdentityLabel, "shard-identity-label", "sharding.manager.io/shard-identity", "label used to specify identity of sharding manager instance")
+	//shard namespace defines the namspace in which sharding manager should drop in shard crds
 	rootCmd.Flags().StringVar(&smParams.ShardNamespace, "shard-namespace", "shard-namespace", "Namespace used to create sharding resources")
 
 	//fetch bootstrap configuration from registry

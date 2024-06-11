@@ -8,6 +8,11 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
+type ShardInteface interface {
+	CreateOrUpdateShard(ctx context.Context, shard *typeV1.Shard) (*typeV1.Shard, error)
+	DeleteShard(ctx context.Context, shard *typeV1.Shard) error
+}
+
 type ShardHandler struct {
 	Config         *model.ShardingManagerConfig
 	ShardNamespace string
