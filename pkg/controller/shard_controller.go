@@ -1,16 +1,18 @@
 package controller
 
 import (
+	"sync"
+	"time"
+	
 	typeV1 "github.com/istio-ecosystem/admiral-api/pkg/apis/admiral/v1"
 	clientset "github.com/istio-ecosystem/admiral-api/pkg/client/clientset/versioned"
 	"github.com/istio-ecosystem/admiral-api/pkg/client/informers/externalversions/admiral/v1"
+	
 	"github.com/prometheus/common/log"
 	metaV1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/informers"
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/tools/cache"
-	"sync"
-	"time"
 )
 
 type ShardController struct {
