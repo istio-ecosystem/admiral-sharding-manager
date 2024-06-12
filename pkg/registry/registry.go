@@ -33,7 +33,7 @@ type identityConfig struct {
 
 type identityMetadata struct {
 	Name             string `json:"asset,omitempty"`
-	SrouceAsset      string `json:"sourceAsset,omitempty"`
+	SourceAsset      string `json:"sourceAsset,omitempty"`
 	DestinationAsset string `json:"destinationAsset,omitempty"`
 }
 
