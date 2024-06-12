@@ -13,9 +13,9 @@ type LoadKubeClient interface {
 	LoadAdmiralApiClientFromConfig(config *rest.Config) (admiralv1.AdmiralV1Interface, error)
 }
 
-type KubeClient struct{}
+type kubeClient struct{}
 
-func (loader *KubeClient) LoadAdmiralApiClientFromPath(kubeConfigPath string) (admiralv1.AdmiralV1Interface, error) {
+func (loader *kubeClient) LoadAdmiralApiClientFromPath(kubeConfigPath string) (admiralv1.AdmiralV1Interface, error) {
 	config, err := getConfig(kubeConfigPath)
 	if err != nil || config == nil {
 		return nil, err
@@ -24,7 +24,7 @@ func (loader *KubeClient) LoadAdmiralApiClientFromPath(kubeConfigPath string) (a
 	return loader.LoadAdmiralApiClientFromConfig(config)
 }
 
-func (loader *KubeClient) LoadAdmiralApiClientFromConfig(config *rest.Config) (admiralv1.AdmiralV1Interface, error) {
+func (loader *kubeClient) LoadAdmiralApiClientFromConfig(config *rest.Config) (admiralv1.AdmiralV1Interface, error) {
 	return admiralv1.NewForConfig(config)
 }
 

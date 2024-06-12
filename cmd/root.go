@@ -33,14 +33,14 @@ func init() {
 	smParams := model.ShardingManagerParams{}
 
 	rootCmd.PersistentFlags().StringVar(&smParams.KubeconfigPath, "kube_config", "", "Use a Kubernetes configuration file instead of in-cluster configuration")
-	//defines the identity of sharding manager instance - logical name for group of resources handled by an instance of sharding manager. This is used to initialize configuration for resources to be handled
-	rootCmd.Flags().StringVar(&smParams.ShardingManagerIdentity, "shard-identity", "devx", "Identity of the sharding manager instance")
+	//defines the identity of sharding manager instance - logical name for group of resources handled by an instance of sharding manager. This is used to initialize configuration from registry and as "admiral.io/shardingMangerIdentity" label value on shard crd
+	rootCmd.Flags().StringVar(&smParams.ShardingManagerIdentity, "shard-identity", "devx", "Identity of the sharding manager instance, used to get configuration from registry and used as value for label \"admiral.io/shardingMangerIdentity\" on shard crd ")
 	//operator identity label which will be set on the shard crd. Using this label value operator will filter the shard it needs to monitor
-	rootCmd.Flags().StringVar(&smParams.OperatorIdentityLabel, "operator-identity-label", "sharding.manager.io/operator-identity", "label used to specify identity of operator for which shard profile is defined")
-	//shard identity label, value of which will be sharding manager instance identity. This is added on the shard crd to identity which sharding manager instance managed this shard crd.
-	rootCmd.Flags().StringVar(&smParams.ShardIdentityLabel, "shard-identity-label", "sharding.manager.io/shard-identity", "label used to specify identity of sharding manager instance")
+	rootCmd.Flags().StringVar(&smParams.OperatorIdentityLabel, "operator-identity-label", "admiral.io/operatorIdentity", "label used to specify identity of operator for which shard profile is defined")
 	//shard namespace defines the namspace in which sharding manager should drop in shard crds
 	rootCmd.Flags().StringVar(&smParams.ShardNamespace, "shard-namespace", "shard-namespace", "Namespace used to create sharding resources")
+	//registry endpoint
+	rootCmd.Flags().StringVar(&smParams.RegistryEndpoint, "registry-endpoint", "", "Registry Service endpoint to get configuration for sharding manager")
 
 	//fetch bootstrap configuration from registry
 	ctx := context.Background()

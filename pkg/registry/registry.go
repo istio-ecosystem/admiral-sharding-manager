@@ -2,32 +2,55 @@ package registry
 
 import (
 	"context"
-	"github.com/istio-ecosystem/admiral-sharding-manager/pkg/model"
 )
 
-//Interface to maintain cluster configuration for a sharding manager identity
-type ClusterConfiguration interface {
-	GetClustersByShardingManagerIdentity(ctx context.Context, shardingManagerIdentityName string) ([]*model.ClusterConfig, error)
-	BulkSyncByShardingManagerIdentity(ctx context.Context, shardingManagerIdentityName string) ([]*model.ClusterConfig, error)
+// Interface to maintain registry configuration for a sharding manager identity
+type RegistryConfigInterface interface {
+	GetClustersByShardingManagerIdentity(ctx context.Context, shardingManagerIdentityName string) ([]*clusterConfig, error)
+	BulkSyncByShardingManagerIdentity(ctx context.Context, shardingManagerIdentityName string) ([]*clusterConfig, error)
+	GetIdentitiesByCluster(ctx context.Context, clusterName string) ([]*identityConfig, error)
 }
 
-//Interface to maintain identity configuration for a cluster
-type IdentityConfiguration interface {
-	GetIdentitiesByCluster(ctx context.Context, clusterName string) ([]*model.IdentityConfig, error)
+type registryClient struct {
+	registryEndpoint string
 }
 
-type RegistryClient struct {
-	RegistryEndpoint string
+// cluster configuration for sharding manager identity
+type clusterConfig struct {
+	Name     string          `json:"name,omitempty"`
+	Locality string          `json:"locality,omitempty"`
+	Metadata clusterMetadata `json:"metadata,omitempty"`
 }
 
-func (c *RegistryClient) GetClustersByShardingManagerIdentity(ctx context.Context, shardingManagerIdentityName string) ([]*model.ClusterConfig, error) {
+type clusterMetadata struct {
+}
+
+// mesh workload identity configuration for cluster
+type identityConfig struct {
+	ClusterName      string           `json:"clustername,omitempty"`
+	IdentityMetadata identityMetadata `json:"assetMetadata,omitempty"`
+}
+
+type identityMetadata struct {
+	Name             string `json:"asset,omitempty"`
+	SrouceAsset      string `json:"sourceAsset,omitempty"`
+	DestinationAsset string `json:"destinationAsset,omitempty"`
+}
+
+func NewRegistryClient(endpoint string) RegistryConfigInterface {
+	return &registryClient{
+		registryEndpoint: endpoint,
+	}
+}
+
+func (c *registryClient) GetClustersByShardingManagerIdentity(ctx context.Context, shardingManagerIdentityName string) ([]*clusterConfig, error) {
 	return nil, nil
 }
 
-func (c *RegistryClient) BulkSyncByShardingManagerIdentity(ctx context.Context, shardingManagerIdentityName string) ([]*model.ClusterConfig, error) {
+func (c *registryClient) BulkSyncByShardingManagerIdentity(ctx context.Context, shardingManagerIdentityName string) ([]*clusterConfig, error) {
 	return nil, nil
 }
 
-func (c *RegistryClient) GetIdentitiesByCluster(ctx context.Context, clusterName string) ([]*model.IdentityConfig, error) {
+func (c *registryClient) GetIdentitiesByCluster(ctx context.Context, clusterName string) ([]*identityConfig, error) {
 	return nil, nil
 }

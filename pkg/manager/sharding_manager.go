@@ -13,13 +13,15 @@ func InitializeShardingManager(ctx context.Context, params *model.ShardingManage
 	var err error
 
 	//setup admiral client
-	kubeClient := KubeClient{}
+	var kubeClient LoadKubeClient = &kubeClient{}
+
 	smConfig.AdmiralApiClient, err = kubeClient.LoadAdmiralApiClientFromPath(params.KubeconfigPath)
 	if err != nil {
 		log.Error("failed to initialize admiral api client")
 	}
 	//setup registry client
-	smConfig.RegistryClient = registry.RegistryClient{}
+	//TODO: send registry endpoint
+	smConfig.RegistryClient = registry.NewRegistryClient("")
 
 	//TODO: setup oms client and subscribe to topic specific for this sharding manager identity
 
@@ -42,13 +44,12 @@ func LoadRegistryConfiguration(ctx context.Context, config *model.ShardingManage
 	}
 
 	for _, cluster := range shardClusters {
-		key := GetClusterCacheKey(cluster)
 		clusterIdentities, err := config.RegistryClient.GetIdentitiesByCluster(ctx, cluster.Name)
 		if err != nil {
 			return err
 		}
 
-		config.Cache.IdentityCache.Store(key, clusterIdentities)
+		config.Cache.IdentityCache.Store(cluster.Name, clusterIdentities)
 	}
 	return nil
 }
