@@ -4,6 +4,11 @@ Copyright © 2024 Intuit Inc.
 package cmd
 
 import (
+	"context"
+	"github.com/istio-ecosystem/admiral-sharding-manager/pkg/controller"
+	"github.com/istio-ecosystem/admiral-sharding-manager/pkg/manager"
+	"github.com/istio-ecosystem/admiral-sharding-manager/pkg/model"
+	"github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
 	"os"
 )
@@ -24,14 +29,26 @@ func Execute() {
 	}
 }
 
-var identifier string
-
 func init() {
-	// Here you will define your flags and configuration settings.
-	// Cobra supports persistent flags, which, if defined here,
-	// will be global for your application.
+	smParams := model.ShardingManagerParams{}
 
-	// Cobra also supports local flags, which will only run
-	// when this action is called directly.
-	rootCmd.Flags().StringVar(&identifier, "identifier", "devx", "Identifier for sharding manager instance")
+	rootCmd.PersistentFlags().StringVar(&smParams.KubeconfigPath, "kube_config", "", "Use a Kubernetes configuration file instead of in-cluster configuration")
+	//defines the identity of sharding manager instance - logical name for group of resources handled by an instance of sharding manager. This is used to initialize configuration from registry and as "admiral.io/shardingMangerIdentity" label value on shard crd
+	rootCmd.Flags().StringVar(&smParams.ShardingManagerIdentity, "shard-identity", "devx", "Identity of the sharding manager instance, used to get configuration from registry and used as value for label \"admiral.io/shardingMangerIdentity\" on shard crd ")
+	//operator identity label which will be set on the shard crd. Using this label value operator will filter the shard it needs to monitor
+	rootCmd.Flags().StringVar(&smParams.OperatorIdentityLabel, "operator-identity-label", "admiral.io/operatorIdentity", "label used to specify identity of operator for which shard profile is defined")
+	//shard namespace defines the namspace in which sharding manager should drop in shard crds
+	rootCmd.Flags().StringVar(&smParams.ShardNamespace, "shard-namespace", "shard-namespace", "Namespace used to create sharding resources")
+	//registry endpoint
+	rootCmd.Flags().StringVar(&smParams.RegistryEndpoint, "registry-endpoint", "", "Registry Service endpoint to get configuration for sharding manager")
+
+	//fetch bootstrap configuration from registry
+	ctx := context.Background()
+
+	smConfig, err := manager.InitializeShardingManager(ctx, &smParams)
+	if err != nil {
+		logrus.Error("failed to initialize sharding manager")
+	}
+
+	controller.NewShardHandler(smConfig, smParams.ShardNamespace)
 }

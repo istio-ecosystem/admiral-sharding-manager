@@ -1,9 +1,26 @@
 package model
 
-//cluster configuration for sharding manager identity
-type Cluster struct {
+import (
+	admiralv1 "github.com/istio-ecosystem/admiral-api/pkg/client/clientset/versioned/typed/admiral/v1"
+	"github.com/istio-ecosystem/admiral-sharding-manager/pkg/registry"
+	"sync"
+)
+
+type ShardingManagerParams struct {
+	ShardingManagerIdentity string
+	OperatorIdentityLabel   string
+	ShardIdentityLabel      string
+	ShardNamespace          string
+	KubeconfigPath          string
+	RegistryEndpoint        string
 }
 
-//mesh workload identity configuration for cluster
-type Identity struct {
+type ShardingManagerConfig struct {
+	AdmiralApiClient admiralv1.AdmiralV1Interface
+	RegistryClient   registry.RegistryConfigInterface
+	Cache            ShardingMangerCache
+}
+
+type ShardingMangerCache struct {
+	IdentityCache *sync.Map
 }
