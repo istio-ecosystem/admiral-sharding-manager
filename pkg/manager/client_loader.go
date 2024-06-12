@@ -8,8 +8,14 @@ import (
 	"k8s.io/client-go/tools/clientcmd"
 )
 
+// Interface to load kubernetes clients
 type LoadKubeClient interface {
+	//loads admiral api client using kubeconfig path
+	//Admiral api client is used to manage admiral resource on specified kubernetes cluster
 	LoadAdmiralApiClientFromPath(path string) (admiralv1.AdmiralV1Interface, error)
+
+	//loads admiral api client using kubernetes config
+	//Admiral api client is used to manage admiral resource on specified kubernetes cluster
 	LoadAdmiralApiClientFromConfig(config *rest.Config) (admiralv1.AdmiralV1Interface, error)
 }
 

@@ -7,7 +7,7 @@ import (
 )
 
 var (
-	meterName    = "admiral_monitoring"
+	meterName    = "admiral_sharding_manager_monitoring"
 	exporter, _  = prometheus.New()
 	provider     = metric.NewMeterProvider(metric.WithReader(exporter))
 	defaultMeter = provider.Meter(meterName)

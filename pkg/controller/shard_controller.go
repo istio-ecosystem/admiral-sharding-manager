@@ -22,6 +22,7 @@ type shardController struct {
 	shardCache          map[string]*typeV1.Shard
 }
 
+// intializes controller for shard resource
 func NewShardController(stopCh <-chan struct{}, crdClientSet clientset.Interface, kubernetesClientset kubernetes.Interface, resyncPeriod time.Duration) (*shardController, error) {
 
 	informerFactory := informers.NewSharedInformerFactoryWithOptions(kubernetesClientset, resyncPeriod)
