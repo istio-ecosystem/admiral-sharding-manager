@@ -4,10 +4,13 @@ import (
 	"context"
 )
 
-// Interface to maintain registry configuration for a sharding manager identity
+// interface to interact with registry service to maintain resource configuration
 type RegistryConfigInterface interface {
+	// fetch cluster configuration by sharding manager identity
 	GetClustersByShardingManagerIdentity(ctx context.Context, shardingManagerIdentityName string) ([]*clusterConfig, error)
+	// bulk fetch cluster configuration by sharding manager identity
 	BulkSyncByShardingManagerIdentity(ctx context.Context, shardingManagerIdentityName string) ([]*clusterConfig, error)
+	// fetch identities by cluster name
 	GetIdentitiesByCluster(ctx context.Context, clusterName string) ([]*identityConfig, error)
 }
 
@@ -37,6 +40,7 @@ type identityMetadata struct {
 	DestinationAsset string `json:"destinationAsset,omitempty"`
 }
 
+// initializes registry client configuration
 func NewRegistryClient(endpoint string) RegistryConfigInterface {
 	return &registryClient{
 		registryEndpoint: endpoint,

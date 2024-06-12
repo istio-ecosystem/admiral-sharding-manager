@@ -8,9 +8,13 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
+// Interface to manage shards
 type ShardInteface interface {
+	// create shard resource on a kubernetes cluster
 	Create(ctx context.Context, shard *typeV1.Shard) (*typeV1.Shard, error)
+	// update shard resource on a kubernetes cluster
 	Update(ctx context.Context, shard *typeV1.Shard) (*typeV1.Shard, error)
+	// delete shard resource on a kubernetes cluster
 	Delete(ctx context.Context, shard *typeV1.Shard) error
 }
 
@@ -19,6 +23,7 @@ type shardHandler struct {
 	shardNamespace string
 }
 
+// initializes ShardHandler with sharding manager configuration and shard namespace
 func NewShardHandler(ShardConfig *model.ShardingManagerConfig, namespace string) shardHandler {
 	shardHandler := shardHandler{
 		config:         ShardConfig,
