@@ -1,0 +1,9 @@
+{
+  "clustername": "cluster1",
+  "assetMetadata": [
+    {
+      "asset": "identity1",
+      "sourceAsset": true
+    }
+  ]
+}

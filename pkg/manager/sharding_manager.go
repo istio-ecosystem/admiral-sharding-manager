@@ -2,6 +2,7 @@ package manager
 
 import (
 	"context"
+	"fmt"
 	"github.com/istio-ecosystem/admiral-sharding-manager/pkg/model"
 	"github.com/istio-ecosystem/admiral-sharding-manager/pkg/registry"
 	log "github.com/sirupsen/logrus"
@@ -20,9 +21,10 @@ func InitializeShardingManager(ctx context.Context, params *model.ShardingManage
 	if err != nil {
 		log.Error("failed to initialize admiral api client")
 	}
+
 	//setup registry client
 	//TODO: send registry endpoint
-	smConfig.RegistryClient = registry.NewRegistryClient("")
+	smConfig.RegistryClient = registry.NewRegistryClient(params.RegistryEndpoint)
 
 	//TODO: setup oms client and subscribe to topic specific for this sharding manager identity
 
@@ -39,13 +41,16 @@ func InitializeShardingManager(ctx context.Context, params *model.ShardingManage
 // loads configuration from registry for provide sharding manager identity
 func LoadRegistryConfiguration(ctx context.Context, config *model.ShardingManagerConfig, params *model.ShardingManagerParams) error {
 	var err error
-
-	shardClusters, err := config.RegistryClient.GetClustersByShardingManagerIdentity(ctx, params.ShardingManagerIdentity)
+	clusterConfiguration, err := config.RegistryClient.GetClustersByShardingManagerIdentity(ctx, params.ShardingManagerIdentity)
 	if err != nil {
 		return err
 	}
 
-	for _, cluster := range shardClusters {
+	if clusterConfiguration == nil {
+		return fmt.Errorf("failed to get cluster configuration from registry")
+	}
+
+	for _, cluster := range clusterConfiguration.(registry.ShardClusterConfig).Clusters {
 		clusterIdentities, err := config.RegistryClient.GetIdentitiesByCluster(ctx, cluster.Name)
 		if err != nil {
 			return err
