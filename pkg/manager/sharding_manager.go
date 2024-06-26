@@ -24,7 +24,7 @@ func InitializeShardingManager(ctx context.Context, params *model.ShardingManage
 
 	//setup registry client
 	//TODO: send registry endpoint
-	smConfig.RegistryClient = registry.NewRegistryClient(params.RegistryEndpoint)
+	smConfig.RegistryClient = registry.NewRegistryClient(registry.WithEndpoint(params.RegistryEndpoint))
 
 	//TODO: setup oms client and subscribe to topic specific for this sharding manager identity
 

@@ -54,9 +54,19 @@ type identityMetadata struct {
 }
 
 // initializes registry client configuration
-func NewRegistryClient(endpoint string) RegistryConfigInterface {
-	return &registryClient{
-		registryEndpoint: endpoint,
+func NewRegistryClient(options ...func(client *registryClient)) *registryClient {
+
+	client := &registryClient{}
+
+	for _, option := range options {
+		option(client)
+	}
+	return client
+}
+
+func WithEndpoint(endpoint string) func(client *registryClient) {
+	return func(client *registryClient) {
+		client.registryEndpoint = endpoint
 	}
 }
 

@@ -150,7 +150,7 @@ func TestParsingIdentityConfig(t *testing.T) {
 
 func TestGetClustersByShardingManagerIdentity(t *testing.T) {
 	expectedClusterConfig := getExpectedClusterConfiguration()
-	registryClient := NewRegistryClient("endpoint")
+	registryClient := NewRegistryClient(WithEndpoint("endpoint"))
 	testCases := []struct {
 		name                  string
 		expectedClusterConfig ShardClusterConfig
@@ -192,7 +192,7 @@ func TestGetClustersByShardingManagerIdentity(t *testing.T) {
 			expectedClusterConfig: expectedClusterConfig,
 			expectedError:         errors.New(""),
 			smIdentity:            "error-test-shard-identity",
-			rc:                    NewRegistryClient(""),
+			rc:                    NewRegistryClient(WithEndpoint("")),
 		},
 	}
 	for _, c := range testCases {
@@ -219,7 +219,7 @@ func TestGetClustersByShardingManagerIdentity(t *testing.T) {
 
 func TestBulkSyncByShardingManagerIdentity(t *testing.T) {
 	expectedClusterConfig := getExpectedBulkClusterConfiguration()
-	registryClient := NewRegistryClient("endpoint")
+	registryClient := NewRegistryClient(WithEndpoint("endpoint"))
 	testCases := []struct {
 		name                  string
 		expectedClusterConfig ShardClusterConfig
@@ -261,7 +261,7 @@ func TestBulkSyncByShardingManagerIdentity(t *testing.T) {
 			expectedClusterConfig: expectedClusterConfig,
 			expectedError:         errors.New(""),
 			smIdentity:            "error-test-shard-identity",
-			rc:                    NewRegistryClient(""),
+			rc:                    NewRegistryClient(WithEndpoint("")),
 		},
 	}
 	for _, c := range testCases {
@@ -288,7 +288,7 @@ func TestBulkSyncByShardingManagerIdentity(t *testing.T) {
 
 func TestGetIdentitiesByCluster(t *testing.T) {
 	expectedIdentityConfig := getExpectedIdentityConfiguration()
-	registryClient := NewRegistryClient("endpoint")
+	registryClient := NewRegistryClient(WithEndpoint("endpoint"))
 
 	testCases := []struct {
 		name                   string
@@ -331,7 +331,7 @@ func TestGetIdentitiesByCluster(t *testing.T) {
 			expectedIdentityConfig: expectedIdentityConfig,
 			expectedError:          errors.New(""),
 			clusterName:            "error-test-cluster-identity",
-			rc:                     NewRegistryClient(""),
+			rc:                     NewRegistryClient(WithEndpoint("")),
 		},
 	}
 	for _, c := range testCases {
