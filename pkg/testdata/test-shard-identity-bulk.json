@@ -11,7 +11,8 @@
         "assetList": [
           {
             "asset": "identity1",
-            "sourceAsset": true
+            "sourceAsset": true,
+            "environment": "qal"
           }
         ]
       }

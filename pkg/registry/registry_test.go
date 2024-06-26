@@ -10,18 +10,18 @@ import (
 )
 
 func getExpectedClusterConfiguration() ShardClusterConfig {
-	cluster1 := clusterConfig{
+	cluster1 := ClusterConfig{
 		Name:     "cluster1",
 		Locality: "us-west-2",
 		Metadata: clusterMetadata{},
 	}
-	cluster2 := clusterConfig{
+	cluster2 := ClusterConfig{
 		Name:     "cluster2",
 		Locality: "us-east-2",
 		Metadata: clusterMetadata{},
 	}
 
-	var clusterConfigs = []clusterConfig{}
+	var clusterConfigs = []ClusterConfig{}
 
 	clusterConfigs = append(clusterConfigs, cluster1)
 	clusterConfigs = append(clusterConfigs, cluster2)
@@ -36,7 +36,7 @@ func getExpectedClusterConfiguration() ShardClusterConfig {
 }
 
 func getExpectedBulkClusterConfiguration() ShardClusterConfig {
-	cluster1 := clusterConfig{
+	cluster1 := ClusterConfig{
 		Name:     "cluster1",
 		Locality: "us-west-2",
 		Metadata: clusterMetadata{},
@@ -49,13 +49,13 @@ func getExpectedBulkClusterConfiguration() ShardClusterConfig {
 			}},
 		},
 	}
-	cluster2 := clusterConfig{
+	cluster2 := ClusterConfig{
 		Name:     "cluster2",
 		Locality: "us-east-2",
 		Metadata: clusterMetadata{},
 	}
 
-	var clusterConfigs = []clusterConfig{}
+	var clusterConfigs = []ClusterConfig{}
 
 	clusterConfigs = append(clusterConfigs, cluster1)
 	clusterConfigs = append(clusterConfigs, cluster2)
@@ -91,7 +91,7 @@ func TestParsingClusterConfig(t *testing.T) {
 		{
 			name: "Given a JSON cluster configuration, " +
 				"When it is unmarshalled, " +
-				"Then it should be read into the clusterConfig struct",
+				"Then it should be read into the ClusterConfig struct",
 			shardClusterConfig: expectedShardClusterConfig,
 		},
 	}
@@ -99,17 +99,17 @@ func TestParsingClusterConfig(t *testing.T) {
 		t.Run(c.name, func(t *testing.T) {
 			jsonResult, err := json.MarshalIndent(c.shardClusterConfig, "", "    ")
 			if err != nil {
-				t.Errorf("while marshaling clusterConfig struct into JSON, got error: %s", err)
+				t.Errorf("while marshaling ClusterConfig struct into JSON, got error: %s", err)
 			}
 
 			var unmarshalledClusterConfig ShardClusterConfig
 			err = json.Unmarshal(jsonResult, &unmarshalledClusterConfig)
 			if err != nil {
-				t.Errorf("while unmarshaling JSON into clusterConfig struct, got error: %s", err)
+				t.Errorf("while unmarshaling JSON into ClusterConfig struct, got error: %s", err)
 			}
 
 			if !reflect.DeepEqual(unmarshalledClusterConfig, c.shardClusterConfig) {
-				t.Errorf("unmarshalled clusterConfig does not match with expected clusterConfig, actual - %v, expected - %v", unmarshalledClusterConfig, expectedShardClusterConfig)
+				t.Errorf("unmarshalled ClusterConfig does not match with expected ClusterConfig, actual - %v, expected - %v", unmarshalledClusterConfig, expectedShardClusterConfig)
 			}
 		})
 	}
@@ -209,7 +209,7 @@ func TestGetClustersByShardingManagerIdentity(t *testing.T) {
 
 			if err == nil {
 				if !cmp.Equal(actualClusterConfiguration, c.expectedClusterConfig) {
-					t.Errorf("actual and expected clusterConfig do not match. actual configuration : %v, expected configuration: %v", actualClusterConfiguration, c.expectedClusterConfig)
+					t.Errorf("actual and expected ClusterConfig do not match. actual configuration : %v, expected configuration: %v", actualClusterConfiguration, c.expectedClusterConfig)
 					t.Errorf(cmp.Diff(actualClusterConfiguration, c.expectedClusterConfig))
 				}
 			}
@@ -278,7 +278,7 @@ func TestBulkSyncByShardingManagerIdentity(t *testing.T) {
 
 			if err == nil {
 				if !cmp.Equal(actualClusterConfiguration, c.expectedClusterConfig) {
-					t.Errorf("actual and expected clusterConfig do not match. actual configuration : %v, expected configuration: %v", actualClusterConfiguration, c.expectedClusterConfig)
+					t.Errorf("actual and expected ClusterConfig do not match. actual configuration : %v, expected configuration: %v", actualClusterConfiguration, c.expectedClusterConfig)
 					t.Errorf(cmp.Diff(actualClusterConfiguration, c.expectedClusterConfig))
 				}
 			}
@@ -348,7 +348,7 @@ func TestGetIdentitiesByCluster(t *testing.T) {
 
 			if err == nil {
 				if !cmp.Equal(actualClusterConfiguration, c.expectedIdentityConfig) {
-					t.Errorf("actual and expected clusterConfig do not match. actual configuration : %v, expected configuration: %v", actualClusterConfiguration, c.expectedIdentityConfig)
+					t.Errorf("actual and expected ClusterConfig do not match. actual configuration : %v, expected configuration: %v", actualClusterConfiguration, c.expectedIdentityConfig)
 					t.Errorf(cmp.Diff(actualClusterConfiguration, c.expectedIdentityConfig))
 				}
 			}

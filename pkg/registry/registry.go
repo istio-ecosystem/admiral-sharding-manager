@@ -25,13 +25,13 @@ type registryClient struct {
 }
 
 type ShardClusterConfig struct {
-	Clusters        []clusterConfig `json:"clusters, omitempty"`
+	Clusters        []ClusterConfig `json:"clusters, omitempty"`
 	LastUpdatedTime string          `json:"lastUpdatedTime, omitempty"`
 	ResourceVersion string          `json:"resourceVersion, omitempty"`
 }
 
 // cluster configuration for sharding manager identity
-type clusterConfig struct {
+type ClusterConfig struct {
 	Name           string          `json:"name,omitempty"`
 	Locality       string          `json:"locality,omitempty"`
 	Metadata       clusterMetadata `json:"metadata,omitempty"`
@@ -49,6 +49,7 @@ type identityConfig struct {
 
 type assetList struct {
 	Name             string `json:"asset,omitempty"`
+	Environment      string `json:environment, omitempty`
 	SourceAsset      bool   `json:"sourceAsset,omitempty"`
 	DestinationAsset bool   `json:"destinationAsset,omitempty"`
 }
