@@ -5,7 +5,7 @@ go 1.22.4
 require (
 	github.com/google/go-cmp v0.6.0
 	github.com/google/uuid v1.6.0
-	github.com/istio-ecosystem/admiral-api v1.0.2
+	github.com/istio-ecosystem/admiral-api v1.0.3-0.20240604180405-9243983d25e2
 	github.com/prometheus/client_golang v1.19.1
 	github.com/sirupsen/logrus v1.9.3
 	github.com/spf13/cobra v1.8.0
