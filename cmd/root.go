@@ -43,7 +43,8 @@ var rootCmd = &cobra.Command{
 		}
 
 		//initialize shard handler
-		controller.NewShardHandler(smConfig, smParams.ShardNamespace)
+		shardingHandler := controller.NewShardHandler(smConfig, &smParams)
+		shardingHandler.HandleLoadDistribution(ctx)
 
 		//initialize monitoring and start servers
 		wg := new(sync.WaitGroup)

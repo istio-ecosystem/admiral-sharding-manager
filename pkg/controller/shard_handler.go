@@ -12,34 +12,33 @@ import (
 // Interface to manage shards
 type ShardInteface interface {
 	// create shard resource on a kubernetes cluster
-	Create(ctx context.Context, clusterConfiguration interface{}) (*typeV1.Shard, error)
+	Create(ctx context.Context, clusterConfiguration []registry.ClusterConfig, shardName string, operatorIdentity string) (*typeV1.Shard, error)
 	// update shard resource on a kubernetes cluster
-	Update(ctx context.Context, clusterConfiguration interface{}) (*typeV1.Shard, error)
+	Update(ctx context.Context, clusterConfiguration []registry.ClusterConfig, shardName string, operatorIdentity string) (*typeV1.Shard, error)
 	// delete shard resource on a kubernetes cluster
 	Delete(ctx context.Context, shard *typeV1.Shard) error
 }
 
 type shardHandler struct {
-	config         *model.ShardingManagerConfig
-	shardNamespace string
+	config *model.ShardingManagerConfig
+	params *model.ShardingManagerParams
 }
 
 // initializes ShardHandler with sharding manager configuration and shard namespace
-func NewShardHandler(ShardConfig *model.ShardingManagerConfig, namespace string) shardHandler {
+func NewShardHandler(ShardConfig *model.ShardingManagerConfig, smParams *model.ShardingManagerParams) shardHandler {
 	shardHandler := shardHandler{
-		config:         ShardConfig,
-		shardNamespace: namespace,
+		config: ShardConfig,
+		params: smParams,
 	}
 
 	return shardHandler
 }
 
-func (sh *shardHandler) Create(ctx context.Context, clusterConfiguration interface{}) (*typeV1.Shard, error) {
-	clusterConfig := clusterConfiguration.(registry.ShardClusterConfig)
+func (sh *shardHandler) Create(ctx context.Context, clusterConfiguration []registry.ClusterConfig, shardName string, operatorIdentity string) (*typeV1.Shard, error) {
 
-	shardToCreate := buildShardResource(clusterConfig.Clusters)
+	shardToCreate := buildShardResource(clusterConfiguration, sh.params, shardName, operatorIdentity)
 
-	createdShard, err := sh.config.AdmiralApiClient.Shards(sh.shardNamespace).Create(ctx, shardToCreate, metav1.CreateOptions{})
+	createdShard, err := sh.config.AdmiralApiClient.Shards(sh.params.ShardNamespace).Create(ctx, shardToCreate, metav1.CreateOptions{})
 	if err != nil {
 		log.Error("failed to create shard resource")
 	}
@@ -47,28 +46,40 @@ func (sh *shardHandler) Create(ctx context.Context, clusterConfiguration interfa
 	return createdShard, err
 }
 
-func (sh *shardHandler) Update(ctx context.Context, clusterConfiguration interface{}) (*typeV1.Shard, error) {
-	clusterConfig := clusterConfiguration.(registry.ShardClusterConfig)
+func (sh *shardHandler) Update(ctx context.Context, clusterConfiguration []registry.ClusterConfig, shardName string, operatorIdentity string) (*typeV1.Shard, error) {
+	var updatedShard *typeV1.Shard
+	var err error
 
-	shardToUpdate := buildShardResource(clusterConfig.Clusters)
+	existingShard, err := sh.config.AdmiralApiClient.Shards(sh.params.ShardNamespace).Get(ctx, shardName, metav1.GetOptions{})
+	shardToUpdate := buildShardResource(clusterConfiguration, sh.params, shardName, operatorIdentity)
 
-	updatedShard, err := sh.config.AdmiralApiClient.Shards(sh.shardNamespace).Update(ctx, shardToUpdate, metav1.UpdateOptions{})
-	if err != nil {
-		log.Error("failed to update shard resource")
+	if existingShard != nil && shardToUpdate != nil {
+		existingShard.Labels = updatedShard.Labels
+		existingShard.Annotations = updatedShard.Annotations
+		existingShard.Spec = updatedShard.Spec
+
+		updatedShard, err = sh.config.AdmiralApiClient.Shards(sh.params.ShardNamespace).Update(ctx, shardToUpdate, metav1.UpdateOptions{})
+		if err != nil {
+			log.Error("failed to update shard resource")
+		}
 	}
 	return updatedShard, err
 }
 
 func (sh *shardHandler) Delete(ctx context.Context, shard *typeV1.Shard) error {
-	err := sh.config.AdmiralApiClient.Shards(sh.shardNamespace).Delete(ctx, shard.Name, metav1.DeleteOptions{})
+	err := sh.config.AdmiralApiClient.Shards(sh.params.ShardNamespace).Delete(ctx, shard.Name, metav1.DeleteOptions{})
 	if err != nil {
 		log.Error("failed to delete shard resource")
 	}
 	return err
 }
 
-func buildShardResource(clusterConfigs []registry.ClusterConfig) *typeV1.Shard {
+func buildShardResource(clusterConfigs []registry.ClusterConfig, smParam *model.ShardingManagerParams, shardName string, operatorIdentity string) *typeV1.Shard {
 	var clusters []typeV1.ClusterShards
+
+	labels := make(map[string]string)
+	labels[smParam.ShardIdentityLabel] = smParam.ShardingManagerIdentity
+	labels[smParam.OperatorIdentityLabel] = operatorIdentity
 
 	for _, clusterConfig := range clusterConfigs {
 		cluster := typeV1.ClusterShards{
@@ -89,7 +100,11 @@ func buildShardResource(clusterConfigs []registry.ClusterConfig) *typeV1.Shard {
 	}
 
 	shard := &typeV1.Shard{
-		ObjectMeta: metav1.ObjectMeta{},
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      shardName,
+			Namespace: smParam.ShardNamespace,
+			Labels:    labels,
+		},
 		Spec: typeV1.ShardSpec{
 			Clusters: clusters,
 		},
@@ -98,6 +113,17 @@ func buildShardResource(clusterConfigs []registry.ClusterConfig) *typeV1.Shard {
 	return shard
 }
 
-func handleLoadDistribution(ctx context.Context) error {
+// distributed clusterconfig into shard resource
+// TODO: Currently does not have logic to distribute cluster configuration, in next phase will have the load distribution in place
+func (sh *shardHandler) HandleLoadDistribution(ctx context.Context) error {
+	operatorIdentity := "0-1"
+	shardName := "shard-" + operatorIdentity
+
+	_, err := sh.Create(ctx, sh.config.Cache.ClusterCache, shardName, operatorIdentity)
+
+	if err != nil {
+		return err
+	}
+
 	return nil
 }

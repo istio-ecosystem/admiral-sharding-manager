@@ -7,6 +7,8 @@ import (
 	"github.com/google/uuid"
 	log "github.com/sirupsen/logrus"
 	"os"
+	"path/filepath"
+	"runtime"
 	"strings"
 )
 
@@ -35,19 +37,19 @@ type ClusterConfig struct {
 	Name           string          `json:"name,omitempty"`
 	Locality       string          `json:"locality,omitempty"`
 	Metadata       clusterMetadata `json:"metadata,omitempty"`
-	IdentityConfig identityConfig  `json:"assets,omitempty"`
+	IdentityConfig IdentityConfig  `json:"assets,omitempty"`
 }
 
 type clusterMetadata struct {
 }
 
 // mesh workload identity configuration for cluster
-type identityConfig struct {
+type IdentityConfig struct {
 	ClusterName string      `json:"clustername,omitempty"`
-	AssetList   []assetList `json:"assetList,omitempty"`
+	AssetList   []AssetList `json:"assetList,omitempty"`
 }
 
-type assetList struct {
+type AssetList struct {
 	Name             string `json:"asset,omitempty"`
 	Environment      string `json:environment, omitempty`
 	SourceAsset      bool   `json:"sourceAsset,omitempty"`
@@ -87,7 +89,9 @@ func (c *registryClient) GetClustersByShardingManagerIdentity(ctx context.Contex
 		return clusterConfigData, err
 	}
 
-	byteValue, err := os.ReadFile("../testdata/" + strings.TrimSpace(shardingManagerIdentity) + ".json")
+	_, base, _, _ := runtime.Caller(0)
+	absPath := filepath.Join(filepath.Dir(base), "/testdata/"+strings.TrimSpace(shardingManagerIdentity)+".json")
+	byteValue, err := os.ReadFile(absPath)
 	if err != nil {
 		ctxLogger.WithError(err).Error("failed to get cluster configuration from registry")
 		return clusterConfigData, err
@@ -125,7 +129,9 @@ func (c *registryClient) BulkSyncByShardingManagerIdentity(ctx context.Context, 
 		return clusterConfigData, err
 	}
 
-	byteValue, err := os.ReadFile("../testdata/" + shardingManagerIdentity + "-bulk.json")
+	_, base, _, _ := runtime.Caller(0)
+	absPath := filepath.Join(filepath.Dir(base), "/testdata/"+strings.TrimSpace(shardingManagerIdentity)+"-bulk.json")
+	byteValue, err := os.ReadFile(absPath)
 	if err != nil {
 		ctxLogger.WithError(err).Error("failed perform bulk sync for cluster configuration from registry")
 		return clusterConfigData, err
@@ -141,7 +147,7 @@ func (c *registryClient) BulkSyncByShardingManagerIdentity(ctx context.Context, 
 }
 
 func (c *registryClient) GetIdentitiesByCluster(ctx context.Context, clusterName string) (interface{}, error) {
-	var identityConfig identityConfig
+	var identityConfig IdentityConfig
 	tid := uuid.NewString()
 
 	ctxLogger := log.WithFields(log.Fields{
@@ -156,7 +162,9 @@ func (c *registryClient) GetIdentitiesByCluster(ctx context.Context, clusterName
 		return identityConfig, err
 	}
 
-	byteValue, err := os.ReadFile("../testdata/" + clusterName + ".json")
+	_, base, _, _ := runtime.Caller(0)
+	absPath := filepath.Join(filepath.Dir(base), "/testdata/"+clusterName+".json")
+	byteValue, err := os.ReadFile(absPath)
 	if err != nil {
 		ctxLogger.WithError(err).Error("failed to get cluster configuration from registry")
 		return identityConfig, err

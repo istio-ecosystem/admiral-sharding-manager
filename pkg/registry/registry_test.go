@@ -40,12 +40,13 @@ func getExpectedBulkClusterConfiguration() ShardClusterConfig {
 		Name:     "cluster1",
 		Locality: "us-west-2",
 		Metadata: clusterMetadata{},
-		IdentityConfig: identityConfig{
+		IdentityConfig: IdentityConfig{
 			ClusterName: "cluster1",
-			AssetList: []assetList{{
+			AssetList: []AssetList{{
 				Name:             "identity1",
 				SourceAsset:      true,
 				DestinationAsset: false,
+				Environment:      "qal",
 			}},
 		},
 	}
@@ -69,13 +70,14 @@ func getExpectedBulkClusterConfiguration() ShardClusterConfig {
 	return shardClusterConfig
 }
 
-func getExpectedIdentityConfiguration() identityConfig {
-	expectedIdentityConfig := identityConfig{
+func getExpectedIdentityConfiguration() IdentityConfig {
+	expectedIdentityConfig := IdentityConfig{
 		ClusterName: "cluster1",
-		AssetList: []assetList{{
+		AssetList: []AssetList{{
 			Name:             "identity1",
 			SourceAsset:      true,
 			DestinationAsset: false,
+			Environment:      "qal",
 		}},
 	}
 
@@ -119,7 +121,7 @@ func TestParsingIdentityConfig(t *testing.T) {
 	expectedIdentityConfig := getExpectedIdentityConfiguration()
 	testCases := []struct {
 		name           string
-		identityConfig identityConfig
+		identityConfig IdentityConfig
 	}{
 		{
 			name: "Given a JSON identity configuration, " +
@@ -135,7 +137,7 @@ func TestParsingIdentityConfig(t *testing.T) {
 				t.Errorf("while marshaling identityConfig struct into JSON, got error: %s", err)
 			}
 
-			var unmarshalledClusterConfig identityConfig
+			var unmarshalledClusterConfig IdentityConfig
 			err = json.Unmarshal(jsonResult, &unmarshalledClusterConfig)
 			if err != nil {
 				t.Errorf("while unmarshaling JSON into identityConfig struct, got error: %s", err)
@@ -292,7 +294,7 @@ func TestGetIdentitiesByCluster(t *testing.T) {
 
 	testCases := []struct {
 		name                   string
-		expectedIdentityConfig identityConfig
+		expectedIdentityConfig IdentityConfig
 		expectedError          any
 		clusterName            string
 		rc                     RegistryConfigInterface
