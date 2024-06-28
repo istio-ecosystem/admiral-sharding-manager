@@ -42,7 +42,7 @@ func getExpectedBulkClusterConfiguration() ShardClusterConfig {
 		Metadata: clusterMetadata{},
 		IdentityConfig: identityConfig{
 			ClusterName: "cluster1",
-			IdentityMetadata: []identityMetadata{{
+			AssetList: []assetList{{
 				Name:             "identity1",
 				SourceAsset:      true,
 				DestinationAsset: false,
@@ -72,7 +72,7 @@ func getExpectedBulkClusterConfiguration() ShardClusterConfig {
 func getExpectedIdentityConfiguration() identityConfig {
 	expectedIdentityConfig := identityConfig{
 		ClusterName: "cluster1",
-		IdentityMetadata: []identityMetadata{{
+		AssetList: []assetList{{
 			Name:             "identity1",
 			SourceAsset:      true,
 			DestinationAsset: false,

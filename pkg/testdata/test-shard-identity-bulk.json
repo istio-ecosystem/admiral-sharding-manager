@@ -8,7 +8,7 @@
       },
       "assets": {
         "clustername": "cluster1",
-        "assetMetadata": [
+        "assetList": [
           {
             "asset": "identity1",
             "sourceAsset": true

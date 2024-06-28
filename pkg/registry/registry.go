@@ -43,11 +43,11 @@ type clusterMetadata struct {
 
 // mesh workload identity configuration for cluster
 type identityConfig struct {
-	ClusterName      string             `json:"clustername,omitempty"`
-	IdentityMetadata []identityMetadata `json:"assetMetadata,omitempty"`
+	ClusterName string      `json:"clustername,omitempty"`
+	AssetList   []assetList `json:"assetList,omitempty"`
 }
 
-type identityMetadata struct {
+type assetList struct {
 	Name             string `json:"asset,omitempty"`
 	SourceAsset      bool   `json:"sourceAsset,omitempty"`
 	DestinationAsset bool   `json:"destinationAsset,omitempty"`
