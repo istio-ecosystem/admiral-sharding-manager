@@ -28,7 +28,9 @@ func InitializeShardingManager(ctx context.Context, params *model.ShardingManage
 
 	//TODO: setup oms client and subscribe to topic specific for this sharding manager identity
 
-	smConfig.Cache = model.ShardingMangerCache{}
+	smConfig.Cache = model.ShardingMangerCache{
+		ClusterCache: []registry.ClusterConfig{},
+	}
 
 	err = LoadRegistryConfiguration(ctx, smConfig, params)
 	if err != nil {
@@ -51,12 +53,15 @@ func LoadRegistryConfiguration(ctx context.Context, config *model.ShardingManage
 	}
 
 	for _, cluster := range clusterConfiguration.(registry.ShardClusterConfig).Clusters {
-		clusterIdentities, err := config.RegistryClient.GetIdentitiesByCluster(ctx, cluster.Name)
+		identityConfig, err := config.RegistryClient.GetIdentitiesByCluster(ctx, cluster.Name)
+
 		if err != nil {
 			return err
 		}
 
-		config.Cache.IdentityCache.Store(cluster.Name, clusterIdentities)
+		cluster.IdentityConfig = identityConfig.(registry.IdentityConfig)
+		config.Cache.ClusterCache = append(config.Cache.ClusterCache, cluster)
 	}
+
 	return nil
 }

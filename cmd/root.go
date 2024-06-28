@@ -43,7 +43,11 @@ var rootCmd = &cobra.Command{
 		}
 
 		//initialize shard handler
-		controller.NewShardHandler(smConfig, smParams.ShardNamespace)
+		shardingHandler := controller.NewShardHandler(smConfig, &smParams)
+		err = shardingHandler.HandleLoadDistribution(ctx)
+		if err != nil {
+			log.Fatalf("error occurred while distributing load among operators: %v", err)
+		}
 
 		//initialize monitoring and start servers
 		wg := new(sync.WaitGroup)

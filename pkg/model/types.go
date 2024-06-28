@@ -3,7 +3,6 @@ package model
 import (
 	admiralv1 "github.com/istio-ecosystem/admiral-api/pkg/client/clientset/versioned/typed/admiral/v1"
 	"github.com/istio-ecosystem/admiral-sharding-manager/pkg/registry"
-	"sync"
 )
 
 type ShardingManagerParams struct {
@@ -22,5 +21,5 @@ type ShardingManagerConfig struct {
 }
 
 type ShardingMangerCache struct {
-	IdentityCache *sync.Map
+	ClusterCache []registry.ClusterConfig
 }
