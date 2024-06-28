@@ -1,0 +1,21 @@
+{
+  "clusters": [
+    {
+      "name": "cluster1",
+      "locality": "us-west-2",
+      "metadata": {
+        "segment": "seg"
+      },
+      "assets": "test-value"
+    },
+    {
+      "name": "cluster2",
+      "locality": "us-east-2",
+      "metadata": {
+        "segment": "seg"
+      }
+    }
+  ],
+  "lastUpdatedTime": "2024-06-20T18:25:43.511Z",
+  "resourceVersion": "1.2.3"
+}
