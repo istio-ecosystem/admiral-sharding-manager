@@ -6,11 +6,10 @@ import (
 
 	"github.com/istio-ecosystem/admiral-sharding-manager/pkg/model"
 	"github.com/istio-ecosystem/admiral-sharding-manager/pkg/registry"
-	log "github.com/sirupsen/logrus"
 )
 
 // initializes sharding manager with required kubernetes clients, registry client and bootstrap configuration
-func InitializeShardingManager(ctx context.Context, params *model.ShardingManagerParams) (*model.ShardingManagerConfig, error) {
+func BootstrapConfiguration(ctx context.Context, params *model.ShardingManagerParams) (*model.ShardingManagerConfig, error) {
 
 	smConfig := &model.ShardingManagerConfig{}
 	var err error
@@ -20,7 +19,7 @@ func InitializeShardingManager(ctx context.Context, params *model.ShardingManage
 
 	smConfig.AdmiralApiClient, err = kubeClient.LoadAdmiralApiClientFromPath(params.KubeconfigPath)
 	if err != nil {
-		log.Error("failed to initialize admiral api client")
+		return nil, fmt.Errorf("failed to initialize admiral api client")
 	}
 
 	//setup registry client
@@ -34,7 +33,7 @@ func InitializeShardingManager(ctx context.Context, params *model.ShardingManage
 	}
 	err = registryConfigSyncer(ctx, smConfig, params)
 	if err != nil {
-		log.Error("failed to initialize registry client")
+		return nil, fmt.Errorf("failed to initialize registry client: %v", err)
 	}
 
 	return smConfig, err

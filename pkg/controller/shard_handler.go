@@ -12,7 +12,7 @@ import (
 )
 
 const (
-	SHARD_IDENTITY_LABEL = "admiral.io/shardIdentity"
+	ShardIdentity = "admiral.io/shardIdentity"
 )
 
 // Interface to manage shards
@@ -31,12 +31,11 @@ type shardHandler struct {
 }
 
 // initializes ShardHandler with sharding manager configuration and shard namespace
-func NewShardHandler(ShardConfig *model.ShardingManagerConfig, smParams *model.ShardingManagerParams) shardHandler {
-	shardHandler := shardHandler{
+func NewShardHandler(ShardConfig *model.ShardingManagerConfig, smParams *model.ShardingManagerParams) *shardHandler {
+	shardHandler := &shardHandler{
 		config: ShardConfig,
 		params: smParams,
 	}
-
 	return shardHandler
 }
 
@@ -93,7 +92,7 @@ func buildShardResource(clusterConfigs []registry.ClusterConfig, smParam *model.
 	var clusters []typeV1.ClusterShards
 
 	labels := make(map[string]string)
-	labels[SHARD_IDENTITY_LABEL] = smParam.ShardingManagerIdentity
+	labels[ShardIdentity] = smParam.ShardingManagerIdentity
 	labels[smParam.OperatorIdentityLabel] = operatorIdentity
 
 	for _, clusterConfig := range clusterConfigs {

@@ -4,12 +4,13 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"github.com/google/uuid"
-	log "github.com/sirupsen/logrus"
 	"os"
 	"path/filepath"
 	"runtime"
 	"strings"
+
+	"github.com/google/uuid"
+	log "github.com/sirupsen/logrus"
 )
 
 // interface to interact with registry service to maintain resource configuration
@@ -83,14 +84,15 @@ func (c *registryClient) GetClustersByShardingManagerIdentity(ctx context.Contex
 	})
 	ctxLogger.Infof("Get cluster configuration for provided sharding manager identity")
 
-	err := checkIfRegistryClientIsInitailized(c)
+	err := checkIfRegistryClientIsInitialized(c)
 	if err != nil {
 		ctxLogger.WithError(err).Error("registry client not initialized")
 		return clusterConfigData, err
 	}
 
 	_, base, _, _ := runtime.Caller(0)
-	absPath := filepath.Join(filepath.Dir(base), "/testdata/"+strings.TrimSpace(shardingManagerIdentity)+".json")
+	filename := fmt.Sprintf("clusters-for-%s-identity.json", shardingManagerIdentity)
+	absPath := filepath.Join(filepath.Dir(base), "/testdata/"+filename)
 	byteValue, err := os.ReadFile(absPath)
 	if err != nil {
 		ctxLogger.WithError(err).Error("failed to get cluster configuration from registry")
@@ -106,10 +108,10 @@ func (c *registryClient) GetClustersByShardingManagerIdentity(ctx context.Contex
 	return clusterConfigData, nil
 }
 
-func checkIfRegistryClientIsInitailized(registryClient *registryClient) error {
-	if registryClient == nil || registryClient.registryEndpoint == "" {
-		return fmt.Errorf("registry client is not initialized")
-	}
+func checkIfRegistryClientIsInitialized(registryClient *registryClient) error {
+	// if registryClient == nil || registryClient.registryEndpoint == "" {
+	// 	return fmt.Errorf("registry client is not initialized")
+	// }
 	return nil
 }
 
@@ -123,7 +125,7 @@ func (c *registryClient) BulkSyncByShardingManagerIdentity(ctx context.Context, 
 	})
 	ctxLogger.Infof("bulk sync cluster configuration for provided sharding manager identity")
 
-	err := checkIfRegistryClientIsInitailized(c)
+	err := checkIfRegistryClientIsInitialized(c)
 	if err != nil {
 		ctxLogger.WithError(err).Error("registry client not initialized")
 		return clusterConfigData, err
@@ -156,7 +158,7 @@ func (c *registryClient) GetIdentitiesByCluster(ctx context.Context, clusterName
 	})
 	ctxLogger.Infof("Get cluster configuration for provided sharding manager identity")
 
-	err := checkIfRegistryClientIsInitailized(c)
+	err := checkIfRegistryClientIsInitialized(c)
 	if err != nil {
 		ctxLogger.WithError(err).Error("registry client not initialized")
 		return identityConfig, err

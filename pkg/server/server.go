@@ -1,12 +1,17 @@
 package server
 
 import (
+	"context"
 	"fmt"
+	"log"
+	"net/http"
+
+	"github.com/istio-ecosystem/admiral-sharding-manager/pkg/controller"
+	"github.com/istio-ecosystem/admiral-sharding-manager/pkg/manager"
+	"github.com/istio-ecosystem/admiral-sharding-manager/pkg/model"
 	"github.com/istio-ecosystem/admiral-sharding-manager/pkg/monitoring"
 	"go.opentelemetry.io/otel/attribute"
 	api "go.opentelemetry.io/otel/metric"
-	"log"
-	"net/http"
 )
 
 const (
@@ -23,8 +28,9 @@ var (
 )
 
 type server struct {
-	mux     *http.ServeMux
-	options *options
+	shardingHandler controller.ShardInteface
+	mux             *http.ServeMux
+	options         *options
 }
 
 type options struct {
@@ -42,10 +48,24 @@ func createOptions(opts ...Options) *options {
 // to update the options by calling an array of functions
 type Options func(*options)
 
-func NewServer(opts ...Options) (*server, error) {
+func NewServer(ctx context.Context, params *model.ShardingManagerParams, opts ...Options) (*server, error) {
+	//initialize sharding manager with bootstrap configuration
+	smConfig, err := manager.BootstrapConfiguration(ctx, params)
+	if err != nil {
+		log.Fatalf("failed to initialize sharding manager")
+	}
+
+	//initialize shard handler
+	shardingHandler := controller.NewShardHandler(smConfig, params)
+	err = shardingHandler.HandleLoadDistribution(ctx)
+	if err != nil {
+		log.Fatalf("error occurred while distributing load among operators: %v", err)
+	}
+	log.Println("sharding manager initialized")
 	httpServer := &server{
-		options: createOptions(opts...),
-		mux:     http.NewServeMux(),
+		shardingHandler: shardingHandler,
+		options:         createOptions(opts...),
+		mux:             http.NewServeMux(),
 	}
 	httpServer.mux.HandleFunc(livenessPath, httpServer.livenessHandler)
 	httpServer.mux.HandleFunc(readinessPath, httpServer.readinessHandler)
