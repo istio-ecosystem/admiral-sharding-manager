@@ -15,7 +15,6 @@ func BootstrapConfiguration(ctx context.Context, params *model.ShardingManagerPa
 		err        error
 		kubeClient LoadKubeClient = &kubeClient{}
 	)
-
 	//setup admiral client
 	smConfig.AdmiralApiClient, err = kubeClient.LoadAdmiralApiClientFromPath(params.KubeconfigPath)
 	if err != nil {

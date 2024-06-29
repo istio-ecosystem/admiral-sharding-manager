@@ -57,7 +57,7 @@ func NewServer(ctx context.Context, params *model.ShardingManagerParams, opts ..
 
 	//initialize shard handler
 	shardingHandler := controller.NewShardHandler(smConfig, params)
-	err = shardingHandler.HandleLoadDistribution(ctx)
+	err = shardingHandler.ProcessShard(ctx)
 	if err != nil {
 		log.Fatalf("error occurred while distributing load among operators: %v", err)
 	}

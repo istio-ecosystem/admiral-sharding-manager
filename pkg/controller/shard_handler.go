@@ -123,9 +123,9 @@ func buildShardResource(clusterConfigs []registry.ClusterConfig, smParam *model.
 	return shard
 }
 
-// distribute clusterconfig into shard resource
+// ProcessShard distribute clusterconfig into shard resource
 // TODO: Currently does not have logic to distribute cluster configuration, in next phase will have the load distribution in place
-func (sh *shardHandler) HandleLoadDistribution(ctx context.Context) error {
+func (sh *shardHandler) ProcessShard(ctx context.Context) error {
 	shardName := model.ShardNamePrefix + "-" + sh.params.OperatorIdentityLabel
 	_, err := sh.Create(ctx, sh.config.Cache.ClusterCache, shardName, sh.params.OperatorIdentityLabel)
 	return err

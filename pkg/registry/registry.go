@@ -10,6 +10,7 @@ import (
 	"strings"
 
 	"github.com/google/uuid"
+	"github.com/sirupsen/logrus"
 	log "github.com/sirupsen/logrus"
 )
 
@@ -116,67 +117,71 @@ func checkIfRegistryClientIsInitialized(registryClient *registryClient) error {
 }
 
 func (c *registryClient) BulkSyncByShardingManagerIdentity(ctx context.Context, shardingManagerIdentity string) (interface{}, error) {
-	var clusterConfigData ShardClusterConfig
-	tid := uuid.NewString()
-
-	ctxLogger := log.WithFields(log.Fields{
-		"smIdentity": shardingManagerIdentity,
-		"tid":        tid,
-	})
+	var (
+		clusterConfigData ShardClusterConfig
+		tid               = uuid.NewString()
+		ctxLogger         = log.WithFields(log.Fields{
+			"smIdentity": shardingManagerIdentity,
+			"tid":        tid,
+		})
+	)
 	ctxLogger.Infof("bulk sync cluster configuration for provided sharding manager identity")
-
-	err := checkIfRegistryClientIsInitialized(c)
+	data, err := c.bulkSyncByShardingManagerIdentity(ctxLogger, shardingManagerIdentity)
 	if err != nil {
-		ctxLogger.WithError(err).Error("registry client not initialized")
 		return clusterConfigData, err
 	}
+	err = json.Unmarshal(data, &clusterConfigData)
+	if err != nil {
+		ctxLogger.WithError(err).Error("failed to unmarshal cluster configuration")
+		return clusterConfigData, err
+	}
+	return clusterConfigData, nil
+}
 
+func (r *registryClient) bulkSyncByShardingManagerIdentity(ctxLogger *logrus.Entry, shardingManagerIdentity string) ([]byte, error) {
 	_, base, _, _ := runtime.Caller(0)
 	absPath := filepath.Join(filepath.Dir(base), "/testdata/"+strings.TrimSpace(shardingManagerIdentity)+"-bulk.json")
 	byteValue, err := os.ReadFile(absPath)
 	if err != nil {
 		ctxLogger.WithError(err).Error("failed perform bulk sync for cluster configuration from registry")
-		return clusterConfigData, err
+		return []byte(""), err
 	}
-
-	err = json.Unmarshal(byteValue, &clusterConfigData)
-	if err != nil {
-		ctxLogger.WithError(err).Error("failed to unmarshal cluster configuration")
-		return clusterConfigData, err
-	}
-
-	return clusterConfigData, nil
+	return byteValue, nil
 }
 
 func (c *registryClient) GetIdentitiesByCluster(ctx context.Context, clusterName string) (interface{}, error) {
-	var identityConfig IdentityConfig
-	tid := uuid.NewString()
-
-	ctxLogger := log.WithFields(log.Fields{
-		"clusterName": clusterName,
-		"tid":         tid,
-	})
+	var (
+		identityConfig IdentityConfig
+		tid            = uuid.NewString()
+		ctxLogger      = log.WithFields(log.Fields{
+			"clusterName": clusterName,
+			"tid":         tid,
+		})
+	)
 	ctxLogger.Infof("Get cluster configuration for provided sharding manager identity")
-
-	err := checkIfRegistryClientIsInitialized(c)
+	data, err := c.getIdentitiesByCluster(ctxLogger, clusterName)
 	if err != nil {
-		ctxLogger.WithError(err).Error("registry client not initialized")
 		return identityConfig, err
 	}
-
-	_, base, _, _ := runtime.Caller(0)
-	absPath := filepath.Join(filepath.Dir(base), "/testdata/"+clusterName+".json")
-	byteValue, err := os.ReadFile(absPath)
-	if err != nil {
-		ctxLogger.WithError(err).Error("failed to get cluster configuration from registry")
-		return identityConfig, err
-	}
-
-	err = json.Unmarshal(byteValue, &identityConfig)
+	err = json.Unmarshal(data, &identityConfig)
 	if err != nil {
 		ctxLogger.WithError(err).Error("failed to unmarshal cluster configuration")
 		return identityConfig, err
 	}
-
 	return identityConfig, nil
+}
+
+func (r *registryClient) getIdentitiesByCluster(ctxLogger *logrus.Entry, clusterName string) ([]byte, error) {
+	var (
+		data = []byte("")
+		err  error
+	)
+	_, base, _, _ := runtime.Caller(0)
+	absPath := filepath.Join(filepath.Dir(base), "/testdata/"+clusterName+".json")
+	data, err = os.ReadFile(absPath)
+	if err != nil {
+		ctxLogger.WithError(err).Error("failed to get cluster configuration from registry")
+		return data, err
+	}
+	return data, nil
 }

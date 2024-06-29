@@ -80,7 +80,6 @@ func startMetricsServer() {
 
 // initialize sharding manager server
 func startNewServer() {
-
 	newServer, err := server.NewServer(ctx, &smParams)
 	if err != nil {
 		log.Fatalf("failed to instantiate a server: %v", err)
