@@ -3,6 +3,7 @@ package controller
 import (
 	"context"
 	"fmt"
+
 	typeV1 "github.com/istio-ecosystem/admiral-api/pkg/apis/admiral/v1"
 	"github.com/istio-ecosystem/admiral-sharding-manager/pkg/model"
 	"github.com/istio-ecosystem/admiral-sharding-manager/pkg/registry"
@@ -132,12 +133,9 @@ func buildShardResource(clusterConfigs []registry.ClusterConfig, smParam *model.
 func (sh *shardHandler) HandleLoadDistribution(ctx context.Context) error {
 	operatorIdentity := "0-1"
 	shardName := "shard-" + operatorIdentity
-
 	_, err := sh.Create(ctx, sh.config.Cache.ClusterCache, shardName, operatorIdentity)
-
 	if err != nil {
 		return err
 	}
-
 	return nil
 }

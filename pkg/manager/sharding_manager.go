@@ -3,6 +3,7 @@ package manager
 import (
 	"context"
 	"fmt"
+
 	"github.com/istio-ecosystem/admiral-sharding-manager/pkg/model"
 	"github.com/istio-ecosystem/admiral-sharding-manager/pkg/registry"
 	log "github.com/sirupsen/logrus"
@@ -31,8 +32,7 @@ func InitializeShardingManager(ctx context.Context, params *model.ShardingManage
 	smConfig.Cache = model.ShardingMangerCache{
 		ClusterCache: []registry.ClusterConfig{},
 	}
-
-	err = LoadRegistryConfiguration(ctx, smConfig, params)
+	err = registryConfigSyncer(ctx, smConfig, params)
 	if err != nil {
 		log.Error("failed to initialize registry client")
 	}
@@ -41,7 +41,7 @@ func InitializeShardingManager(ctx context.Context, params *model.ShardingManage
 }
 
 // loads configuration from registry for provide sharding manager identity
-func LoadRegistryConfiguration(ctx context.Context, config *model.ShardingManagerConfig, params *model.ShardingManagerParams) error {
+func registryConfigSyncer(ctx context.Context, config *model.ShardingManagerConfig, params *model.ShardingManagerParams) error {
 	var err error
 	clusterConfiguration, err := config.RegistryClient.GetClustersByShardingManagerIdentity(ctx, params.ShardingManagerIdentity)
 	if err != nil {
