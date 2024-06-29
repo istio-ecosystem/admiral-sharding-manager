@@ -43,9 +43,7 @@ func (sh *shardHandler) Create(ctx context.Context, clusterConfiguration []regis
 	if sh.config.AdmiralApiClient == nil {
 		return nil, fmt.Errorf("admiral api client is not initialized")
 	}
-
 	shardToCreate := buildShardResource(clusterConfiguration, sh.params, shardName, operatorIdentity)
-
 	createdShard, err := sh.config.AdmiralApiClient.Shards(sh.params.ShardNamespace).Create(ctx, shardToCreate, metav1.CreateOptions{})
 	if err != nil {
 		log.Error("failed to create shard resource")
@@ -80,18 +78,18 @@ func (sh *shardHandler) Delete(ctx context.Context, shard *typeV1.Shard) error {
 	if sh.config.AdmiralApiClient == nil {
 		return fmt.Errorf("admiral api client is not initialized")
 	}
-
 	err := sh.config.AdmiralApiClient.Shards(sh.params.ShardNamespace).Delete(ctx, shard.Name, metav1.DeleteOptions{})
 	if err != nil {
-		log.Error("failed to delete shard resource")
+		return fmt.Errorf("failed to delete shard resource: %v", err)
 	}
 	return err
 }
 
 func buildShardResource(clusterConfigs []registry.ClusterConfig, smParam *model.ShardingManagerParams, shardName string, operatorIdentity string) *typeV1.Shard {
-	var clusters []typeV1.ClusterShards
-
-	labels := make(map[string]string)
+	var (
+		clusters []typeV1.ClusterShards
+		labels   = make(map[string]string)
+	)
 	labels[ShardIdentity] = smParam.ShardingManagerIdentity
 	labels[smParam.OperatorIdentityLabel] = operatorIdentity
 
@@ -100,7 +98,6 @@ func buildShardResource(clusterConfigs []registry.ClusterConfig, smParam *model.
 			Name:     clusterConfig.Name,
 			Locality: clusterConfig.Locality,
 		}
-
 		var identities []typeV1.IdentityItem
 		for _, identityConfig := range clusterConfig.IdentityConfig.AssetList {
 			identity := typeV1.IdentityItem{
@@ -123,18 +120,13 @@ func buildShardResource(clusterConfigs []registry.ClusterConfig, smParam *model.
 			Clusters: clusters,
 		},
 	}
-
 	return shard
 }
 
-// distributed clusterconfig into shard resource
+// distribute clusterconfig into shard resource
 // TODO: Currently does not have logic to distribute cluster configuration, in next phase will have the load distribution in place
 func (sh *shardHandler) HandleLoadDistribution(ctx context.Context) error {
-	operatorIdentity := "0-1"
-	shardName := "shard-" + operatorIdentity
-	_, err := sh.Create(ctx, sh.config.Cache.ClusterCache, shardName, operatorIdentity)
-	if err != nil {
-		return err
-	}
-	return nil
+	shardName := model.ShardNamePrefix + "-" + sh.params.OperatorIdentityLabel
+	_, err := sh.Create(ctx, sh.config.Cache.ClusterCache, shardName, sh.params.OperatorIdentityLabel)
+	return err
 }

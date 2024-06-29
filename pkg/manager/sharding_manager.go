@@ -10,24 +10,21 @@ import (
 
 // initializes sharding manager with required kubernetes clients, registry client and bootstrap configuration
 func BootstrapConfiguration(ctx context.Context, params *model.ShardingManagerParams) (*model.ShardingManagerConfig, error) {
-
-	smConfig := &model.ShardingManagerConfig{}
-	var err error
+	var (
+		smConfig   = &model.ShardingManagerConfig{}
+		err        error
+		kubeClient LoadKubeClient = &kubeClient{}
+	)
 
 	//setup admiral client
-	var kubeClient LoadKubeClient = &kubeClient{}
-
 	smConfig.AdmiralApiClient, err = kubeClient.LoadAdmiralApiClientFromPath(params.KubeconfigPath)
 	if err != nil {
 		return nil, fmt.Errorf("failed to initialize admiral api client")
 	}
-
 	//setup registry client
 	//TODO: send registry endpoint
 	smConfig.RegistryClient = registry.NewRegistryClient(registry.WithEndpoint(params.RegistryEndpoint))
-
 	//TODO: setup oms client and subscribe to topic specific for this sharding manager identity
-
 	smConfig.Cache = model.ShardingMangerCache{
 		ClusterCache: []registry.ClusterConfig{},
 	}
@@ -35,7 +32,6 @@ func BootstrapConfiguration(ctx context.Context, params *model.ShardingManagerPa
 	if err != nil {
 		return nil, fmt.Errorf("failed to initialize registry client: %v", err)
 	}
-
 	return smConfig, err
 }
 
@@ -46,21 +42,16 @@ func registryConfigSyncer(ctx context.Context, config *model.ShardingManagerConf
 	if err != nil {
 		return err
 	}
-
 	if clusterConfiguration == nil {
 		return fmt.Errorf("failed to get cluster configuration from registry")
 	}
-
 	for _, cluster := range clusterConfiguration.(registry.ShardClusterConfig).Clusters {
 		identityConfig, err := config.RegistryClient.GetIdentitiesByCluster(ctx, cluster.Name)
-
 		if err != nil {
 			return err
 		}
-
 		cluster.IdentityConfig = identityConfig.(registry.IdentityConfig)
 		config.Cache.ClusterCache = append(config.Cache.ClusterCache, cluster)
 	}
-
 	return nil
 }
