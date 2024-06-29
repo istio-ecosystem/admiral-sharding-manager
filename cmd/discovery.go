@@ -21,8 +21,8 @@ import (
 // discoveryCmd represents the discovery command
 var discoveryCmd = &cobra.Command{
 	Use:   "discovery",
-	Short: "Discovery configuration to distribute amongst admiral operators",
-	Long:  `Discovery configuration to distribute amongst admiral operators.`,
+	Short: "Discover configuration to distribute amongst admiral operators",
+	Long:  `Discover configuration to distribute amongst admiral operators.`,
 	Run: func(cmd *cobra.Command, args []string) {
 		ctx := context.Background()
 		//initialize monitoring and start servers
