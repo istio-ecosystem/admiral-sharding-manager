@@ -7,6 +7,7 @@ import (
 	typeV1 "github.com/istio-ecosystem/admiral-api/pkg/apis/admiral/v1"
 	"github.com/istio-ecosystem/admiral-sharding-manager/pkg/model"
 	"github.com/istio-ecosystem/admiral-sharding-manager/pkg/registry"
+
 	log "github.com/sirupsen/logrus"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
@@ -16,7 +17,7 @@ const (
 )
 
 // Interface to manage shards
-type ShardInteface interface {
+type ShardInterface interface {
 	// create shard resource on a kubernetes cluster
 	Create(ctx context.Context, clusterConfiguration []registry.ClusterConfig, shardName string, operatorIdentity string) (*typeV1.Shard, error)
 	// update shard resource on a kubernetes cluster
@@ -26,27 +27,27 @@ type ShardInteface interface {
 }
 
 type shardHandler struct {
-	config *model.ShardingManagerConfig
-	params *model.ShardingManagerParams
+	clients model.Clients
+	params  *model.ShardingManagerParams
 }
 
 // initializes ShardHandler with sharding manager configuration and shard namespace
-func NewShardHandler(ShardConfig *model.ShardingManagerConfig, smParams *model.ShardingManagerParams) *shardHandler {
+func NewShardHandler(clients model.Clients, smParams *model.ShardingManagerParams) *shardHandler {
 	shardHandler := &shardHandler{
-		config: ShardConfig,
-		params: smParams,
+		clients: clients,
+		params:  smParams,
 	}
 	return shardHandler
 }
 
 func (sh *shardHandler) Create(ctx context.Context, clusterConfiguration []registry.ClusterConfig, shardName string, operatorIdentity string) (*typeV1.Shard, error) {
-	if sh.config.AdmiralApiClient == nil {
+	if sh.clients.AdmiralClient == nil {
 		return nil, fmt.Errorf("admiral api client is not initialized")
 	}
 	shardToCreate := buildShardResource(clusterConfiguration, sh.params, shardName, operatorIdentity)
-	createdShard, err := sh.config.AdmiralApiClient.Shards(sh.params.ShardNamespace).Create(ctx, shardToCreate, metav1.CreateOptions{})
+	createdShard, err := sh.clients.AdmiralClient.Shards(sh.params.ShardNamespace).Create(ctx, shardToCreate, metav1.CreateOptions{})
 	if err != nil {
-		log.Error("failed to create shard resource")
+		return nil, fmt.Errorf("failed to create shard resource: %v", err)
 	}
 	return createdShard, err
 }
@@ -54,11 +55,7 @@ func (sh *shardHandler) Create(ctx context.Context, clusterConfiguration []regis
 func (sh *shardHandler) Update(ctx context.Context, clusterConfiguration []registry.ClusterConfig, shardName string, operatorIdentity string) (*typeV1.Shard, error) {
 	var updatedShard *typeV1.Shard
 
-	if sh.config.AdmiralApiClient == nil {
-		return nil, fmt.Errorf("admiral api client is not initialized")
-	}
-
-	existingShard, err := sh.config.AdmiralApiClient.Shards(sh.params.ShardNamespace).Get(ctx, shardName, metav1.GetOptions{})
+	existingShard, err := sh.clients.AdmiralClient.Shards(sh.params.ShardNamespace).Get(ctx, shardName, metav1.GetOptions{})
 	shardToUpdate := buildShardResource(clusterConfiguration, sh.params, shardName, operatorIdentity)
 
 	if existingShard != nil && shardToUpdate != nil {
@@ -66,7 +63,7 @@ func (sh *shardHandler) Update(ctx context.Context, clusterConfiguration []regis
 		existingShard.Annotations = updatedShard.Annotations
 		existingShard.Spec = updatedShard.Spec
 
-		updatedShard, err = sh.config.AdmiralApiClient.Shards(sh.params.ShardNamespace).Update(ctx, shardToUpdate, metav1.UpdateOptions{})
+		updatedShard, err = sh.clients.AdmiralClient.Shards(sh.params.ShardNamespace).Update(ctx, shardToUpdate, metav1.UpdateOptions{})
 		if err != nil {
 			log.Error("failed to update shard resource")
 		}
@@ -75,10 +72,10 @@ func (sh *shardHandler) Update(ctx context.Context, clusterConfiguration []regis
 }
 
 func (sh *shardHandler) Delete(ctx context.Context, shard *typeV1.Shard) error {
-	if sh.config.AdmiralApiClient == nil {
+	if sh.clients.AdmiralClient == nil {
 		return fmt.Errorf("admiral api client is not initialized")
 	}
-	err := sh.config.AdmiralApiClient.Shards(sh.params.ShardNamespace).Delete(ctx, shard.Name, metav1.DeleteOptions{})
+	err := sh.clients.AdmiralClient.Shards(sh.params.ShardNamespace).Delete(ctx, shard.Name, metav1.DeleteOptions{})
 	if err != nil {
 		return fmt.Errorf("failed to delete shard resource: %v", err)
 	}
@@ -121,12 +118,4 @@ func buildShardResource(clusterConfigs []registry.ClusterConfig, smParam *model.
 		},
 	}
 	return shard
-}
-
-// ProcessShard distribute clusterconfig into shard resource
-// TODO: Currently does not have logic to distribute cluster configuration, in next phase will have the load distribution in place
-func (sh *shardHandler) ProcessShard(ctx context.Context) error {
-	shardName := model.ShardNamePrefix + "-" + sh.params.OperatorIdentityLabel
-	_, err := sh.Create(ctx, sh.config.Cache.ClusterCache, shardName, sh.params.OperatorIdentityLabel)
-	return err
 }
