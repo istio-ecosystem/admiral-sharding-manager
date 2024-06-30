@@ -6,7 +6,7 @@ import (
 
 	typeV1 "github.com/istio-ecosystem/admiral-api/pkg/apis/admiral/v1"
 	clientset "github.com/istio-ecosystem/admiral-api/pkg/client/clientset/versioned"
-	"github.com/istio-ecosystem/admiral-api/pkg/client/informers/externalversions/admiral/v1"
+	v1 "github.com/istio-ecosystem/admiral-api/pkg/client/informers/externalversions/admiral/v1"
 
 	log "github.com/sirupsen/logrus"
 	metaV1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -22,12 +22,10 @@ type shardController struct {
 	shardCache          map[string]*typeV1.Shard
 }
 
-// intializes controller for shard resource
+// initializes controller for shard resource
 func NewShardController(stopCh <-chan struct{}, crdClientSet clientset.Interface, kubernetesClientset kubernetes.Interface, resyncPeriod time.Duration) (*shardController, error) {
-
 	informerFactory := informers.NewSharedInformerFactoryWithOptions(kubernetesClientset, resyncPeriod)
 	informerFactory.Start(stopCh)
-
 	shardInformer := v1.NewShardInformer(crdClientSet,
 		metaV1.NamespaceAll,
 		resyncPeriod,
