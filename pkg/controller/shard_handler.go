@@ -8,7 +8,6 @@ import (
 	"github.com/istio-ecosystem/admiral-sharding-manager/pkg/model"
 	"github.com/istio-ecosystem/admiral-sharding-manager/pkg/registry"
 
-	log "github.com/sirupsen/logrus"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
@@ -40,41 +39,38 @@ func NewShardHandler(clients model.Clients, smParams *model.ShardingManagerParam
 	return shardHandler
 }
 
-func (sh *shardHandler) Create(ctx context.Context, clusterConfiguration []registry.ClusterConfig, shardName string, operatorIdentity string) (*typeV1.Shard, error) {
-	if sh.clients.AdmiralClient == nil {
-		return nil, fmt.Errorf("admiral api client is not initialized")
-	}
+func (sh *shardHandler) Create(
+	ctx context.Context,
+	clusterConfiguration []registry.ClusterConfig,
+	shardName string,
+	operatorIdentity string) (*typeV1.Shard, error) {
 	shardToCreate := buildShardResource(clusterConfiguration, sh.params, shardName, operatorIdentity)
-	createdShard, err := sh.clients.AdmiralClient.Shards(sh.params.ShardNamespace).Create(ctx, shardToCreate, metav1.CreateOptions{})
-	if err != nil {
-		return nil, fmt.Errorf("failed to create shard resource: %v", err)
-	}
-	return createdShard, err
+	return sh.clients.AdmiralClient.Shards(sh.params.ShardNamespace).Create(ctx, shardToCreate, metav1.CreateOptions{})
 }
 
-func (sh *shardHandler) Update(ctx context.Context, clusterConfiguration []registry.ClusterConfig, shardName string, operatorIdentity string) (*typeV1.Shard, error) {
+func (sh *shardHandler) Update(
+	ctx context.Context,
+	clusterConfiguration []registry.ClusterConfig,
+	shardName string,
+	operatorIdentity string) (*typeV1.Shard, error) {
 	var updatedShard *typeV1.Shard
-
 	existingShard, err := sh.clients.AdmiralClient.Shards(sh.params.ShardNamespace).Get(ctx, shardName, metav1.GetOptions{})
 	shardToUpdate := buildShardResource(clusterConfiguration, sh.params, shardName, operatorIdentity)
 
 	if existingShard != nil && shardToUpdate != nil {
-		existingShard.Labels = updatedShard.Labels
-		existingShard.Annotations = updatedShard.Annotations
-		existingShard.Spec = updatedShard.Spec
+		existingShard.Labels = shardToUpdate.Labels
+		existingShard.Annotations = shardToUpdate.Annotations
+		existingShard.Spec = shardToUpdate.Spec
 
-		updatedShard, err = sh.clients.AdmiralClient.Shards(sh.params.ShardNamespace).Update(ctx, shardToUpdate, metav1.UpdateOptions{})
+		updatedShard, err = sh.clients.AdmiralClient.Shards(sh.params.ShardNamespace).Update(ctx, existingShard, metav1.UpdateOptions{})
 		if err != nil {
-			log.Error("failed to update shard resource")
+			return nil, fmt.Errorf("failed to update shard resource: %v", err)
 		}
 	}
 	return updatedShard, err
 }
 
 func (sh *shardHandler) Delete(ctx context.Context, shard *typeV1.Shard) error {
-	if sh.clients.AdmiralClient == nil {
-		return fmt.Errorf("admiral api client is not initialized")
-	}
 	err := sh.clients.AdmiralClient.Shards(sh.params.ShardNamespace).Delete(ctx, shard.Name, metav1.DeleteOptions{})
 	if err != nil {
 		return fmt.Errorf("failed to delete shard resource: %v", err)
