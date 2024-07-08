@@ -1,0 +1,10 @@
+{
+    "clustername": "cluster-1-use2-k8s",
+    "assetList": [
+      {
+        "asset": "Intuit.asset1",
+        "sourceAsset": true,
+        "environment": "qal"
+      }
+    ]
+  }

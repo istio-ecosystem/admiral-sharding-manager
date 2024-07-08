@@ -1,12 +1,18 @@
 package server
 
 import (
+	"context"
 	"fmt"
-	"github.com/istio-ecosystem/admiral-sharding-manager/pkg/monitoring"
-	"go.opentelemetry.io/otel/attribute"
-	api "go.opentelemetry.io/otel/metric"
 	"log"
 	"net/http"
+
+	"github.com/istio-ecosystem/admiral-sharding-manager/pkg/controller"
+	"github.com/istio-ecosystem/admiral-sharding-manager/pkg/manager"
+	"github.com/istio-ecosystem/admiral-sharding-manager/pkg/model"
+	"github.com/istio-ecosystem/admiral-sharding-manager/pkg/monitoring"
+	"github.com/istio-ecosystem/admiral-sharding-manager/pkg/registry"
+	"go.opentelemetry.io/otel/attribute"
+	api "go.opentelemetry.io/otel/metric"
 )
 
 const (
@@ -42,7 +48,21 @@ func createOptions(opts ...Options) *options {
 // to update the options by calling an array of functions
 type Options func(*options)
 
-func NewServer(opts ...Options) (*server, error) {
+func NewServer(ctx context.Context, params *model.ShardingManagerParams, opts ...Options) (*server, error) {
+	client, err := initClients(params)
+	if err != nil {
+		return nil, fmt.Errorf("failed setting up clients: %v", err)
+	}
+	shardHandler := controller.NewShardHandler(client, params)
+	shardingManager, err := manager.NewShardingManager(ctx, shardHandler, client, params.ShardingManagerIdentity)
+	if err != nil {
+		return nil, fmt.Errorf("error initializing sharding manager: %v", err)
+	}
+	err = shardingManager.Start(ctx)
+	if err != nil {
+		return nil, fmt.Errorf("unable to start sharding manager")
+	}
+
 	httpServer := &server{
 		options: createOptions(opts...),
 		mux:     http.NewServeMux(),
@@ -52,13 +72,25 @@ func NewServer(opts ...Options) (*server, error) {
 	return httpServer, nil
 }
 
+func initClients(params *model.ShardingManagerParams) (model.Clients, error) {
+	var client model.Clients
+	var kubeClient manager.LoadKubeClient = &manager.KubeClient{}
+	admiralAPIClient, err := kubeClient.LoadAdmiralApiClientFromPath(params.KubeconfigPath)
+	if err != nil {
+		return client, fmt.Errorf("failed to initialize admiral api client")
+	}
+	client.AdmiralClient = admiralAPIClient
+	client.RegistryClient = registry.NewRegistryClient(registry.WithEndpoint(params.RegistryEndpoint))
+	return client, nil
+}
+
 func (s *server) Listen(port string) error {
 	return http.ListenAndServe(":"+port, s.mux)
 }
 
 func (s *server) livenessHandler(responseWriter http.ResponseWriter, request *http.Request) {
 	responseWriter.WriteHeader(200)
-	_, err := responseWriter.Write([]byte(fmt.Sprintf("OK\n")))
+	_, err := responseWriter.Write([]byte(fmt.Sprintln("OK")))
 	if err != nil {
 		shardingManagerRequestsTotal.Increment(api.WithAttributes(
 			attribute.Key("path").String(livenessPath),
@@ -77,7 +109,7 @@ func (s *server) readinessHandler(responseWriter http.ResponseWriter, request *h
 		attribute.Key("path").String(readinessPath),
 	))
 	responseWriter.WriteHeader(200)
-	_, err := responseWriter.Write([]byte(fmt.Sprintf("OK\n")))
+	_, err := responseWriter.Write([]byte(fmt.Sprintln("OK")))
 	if err != nil {
 		shardingManagerRequestsTotal.Increment(api.WithAttributes(
 			attribute.Key("path").String(readinessPath),

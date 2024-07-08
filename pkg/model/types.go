@@ -15,9 +15,12 @@ type ShardingManagerParams struct {
 }
 
 type ShardingManagerConfig struct {
-	AdmiralApiClient admiralv1.AdmiralV1Interface
-	RegistryClient   registry.RegistryConfigInterface
-	Cache            ShardingMangerCache
+	Cache []registry.ClusterConfig
+}
+
+type Clients struct {
+	AdmiralClient  admiralv1.AdmiralV1Interface
+	RegistryClient registry.RegistryConfigInterface
 }
 
 type ShardingMangerCache struct {

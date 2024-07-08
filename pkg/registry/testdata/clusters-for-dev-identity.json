@@ -1,0 +1,18 @@
+{
+    "clusters": [
+      {
+        "name": "cluster-1-usw2-k8s",
+        "locality": "us-west-2",
+        "metadata": {
+        }
+      },
+      {
+        "name": "cluster-1-use2-k8s",
+        "locality": "us-east-2",
+        "metadata": {
+        }
+      }
+    ],
+    "lastUpdatedTime": "2024-06-20T18:25:43.511Z",
+    "resourceVersion": "1.2.3"
+  }

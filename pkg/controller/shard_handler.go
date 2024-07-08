@@ -3,19 +3,20 @@ package controller
 import (
 	"context"
 	"fmt"
+
 	typeV1 "github.com/istio-ecosystem/admiral-api/pkg/apis/admiral/v1"
 	"github.com/istio-ecosystem/admiral-sharding-manager/pkg/model"
 	"github.com/istio-ecosystem/admiral-sharding-manager/pkg/registry"
-	log "github.com/sirupsen/logrus"
+
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
 const (
-	SHARD_IDENTITY_LABEL = "admiral.io/shardIdentity"
+	ShardIdentity = "admiral.io/shardIdentity"
 )
 
 // Interface to manage shards
-type ShardInteface interface {
+type ShardInterface interface {
 	// create shard resource on a kubernetes cluster
 	Create(ctx context.Context, clusterConfiguration []registry.ClusterConfig, shardName string, operatorIdentity string) (*typeV1.Shard, error)
 	// update shard resource on a kubernetes cluster
@@ -25,74 +26,64 @@ type ShardInteface interface {
 }
 
 type shardHandler struct {
-	config *model.ShardingManagerConfig
-	params *model.ShardingManagerParams
+	clients model.Clients
+	params  *model.ShardingManagerParams
 }
 
 // initializes ShardHandler with sharding manager configuration and shard namespace
-func NewShardHandler(ShardConfig *model.ShardingManagerConfig, smParams *model.ShardingManagerParams) shardHandler {
-	shardHandler := shardHandler{
-		config: ShardConfig,
-		params: smParams,
+func NewShardHandler(clients model.Clients, smParams *model.ShardingManagerParams) *shardHandler {
+	shardHandler := &shardHandler{
+		clients: clients,
+		params:  smParams,
 	}
-
 	return shardHandler
 }
 
-func (sh *shardHandler) Create(ctx context.Context, clusterConfiguration []registry.ClusterConfig, shardName string, operatorIdentity string) (*typeV1.Shard, error) {
-	if sh.config.AdmiralApiClient == nil {
-		return nil, fmt.Errorf("admiral api client is not initialized")
-	}
-
+func (sh *shardHandler) Create(
+	ctx context.Context,
+	clusterConfiguration []registry.ClusterConfig,
+	shardName string,
+	operatorIdentity string) (*typeV1.Shard, error) {
 	shardToCreate := buildShardResource(clusterConfiguration, sh.params, shardName, operatorIdentity)
-
-	createdShard, err := sh.config.AdmiralApiClient.Shards(sh.params.ShardNamespace).Create(ctx, shardToCreate, metav1.CreateOptions{})
-	if err != nil {
-		log.Error("failed to create shard resource")
-	}
-	return createdShard, err
+	return sh.clients.AdmiralClient.Shards(sh.params.ShardNamespace).Create(ctx, shardToCreate, metav1.CreateOptions{})
 }
 
-func (sh *shardHandler) Update(ctx context.Context, clusterConfiguration []registry.ClusterConfig, shardName string, operatorIdentity string) (*typeV1.Shard, error) {
+func (sh *shardHandler) Update(
+	ctx context.Context,
+	clusterConfiguration []registry.ClusterConfig,
+	shardName string,
+	operatorIdentity string) (*typeV1.Shard, error) {
 	var updatedShard *typeV1.Shard
-
-	if sh.config.AdmiralApiClient == nil {
-		return nil, fmt.Errorf("admiral api client is not initialized")
-	}
-
-	existingShard, err := sh.config.AdmiralApiClient.Shards(sh.params.ShardNamespace).Get(ctx, shardName, metav1.GetOptions{})
+	existingShard, err := sh.clients.AdmiralClient.Shards(sh.params.ShardNamespace).Get(ctx, shardName, metav1.GetOptions{})
 	shardToUpdate := buildShardResource(clusterConfiguration, sh.params, shardName, operatorIdentity)
 
 	if existingShard != nil && shardToUpdate != nil {
-		existingShard.Labels = updatedShard.Labels
-		existingShard.Annotations = updatedShard.Annotations
-		existingShard.Spec = updatedShard.Spec
+		existingShard.Labels = shardToUpdate.Labels
+		existingShard.Annotations = shardToUpdate.Annotations
+		existingShard.Spec = shardToUpdate.Spec
 
-		updatedShard, err = sh.config.AdmiralApiClient.Shards(sh.params.ShardNamespace).Update(ctx, shardToUpdate, metav1.UpdateOptions{})
+		updatedShard, err = sh.clients.AdmiralClient.Shards(sh.params.ShardNamespace).Update(ctx, existingShard, metav1.UpdateOptions{})
 		if err != nil {
-			log.Error("failed to update shard resource")
+			return nil, fmt.Errorf("failed to update shard resource: %v", err)
 		}
 	}
 	return updatedShard, err
 }
 
 func (sh *shardHandler) Delete(ctx context.Context, shard *typeV1.Shard) error {
-	if sh.config.AdmiralApiClient == nil {
-		return fmt.Errorf("admiral api client is not initialized")
-	}
-
-	err := sh.config.AdmiralApiClient.Shards(sh.params.ShardNamespace).Delete(ctx, shard.Name, metav1.DeleteOptions{})
+	err := sh.clients.AdmiralClient.Shards(sh.params.ShardNamespace).Delete(ctx, shard.Name, metav1.DeleteOptions{})
 	if err != nil {
-		log.Error("failed to delete shard resource")
+		return fmt.Errorf("failed to delete shard resource: %v", err)
 	}
 	return err
 }
 
 func buildShardResource(clusterConfigs []registry.ClusterConfig, smParam *model.ShardingManagerParams, shardName string, operatorIdentity string) *typeV1.Shard {
-	var clusters []typeV1.ClusterShards
-
-	labels := make(map[string]string)
-	labels[SHARD_IDENTITY_LABEL] = smParam.ShardingManagerIdentity
+	var (
+		clusters []typeV1.ClusterShards
+		labels   = make(map[string]string)
+	)
+	labels[ShardIdentity] = smParam.ShardingManagerIdentity
 	labels[smParam.OperatorIdentityLabel] = operatorIdentity
 
 	for _, clusterConfig := range clusterConfigs {
@@ -100,7 +91,6 @@ func buildShardResource(clusterConfigs []registry.ClusterConfig, smParam *model.
 			Name:     clusterConfig.Name,
 			Locality: clusterConfig.Locality,
 		}
-
 		var identities []typeV1.IdentityItem
 		for _, identityConfig := range clusterConfig.IdentityConfig.AssetList {
 			identity := typeV1.IdentityItem{
@@ -123,21 +113,5 @@ func buildShardResource(clusterConfigs []registry.ClusterConfig, smParam *model.
 			Clusters: clusters,
 		},
 	}
-
 	return shard
-}
-
-// distributed clusterconfig into shard resource
-// TODO: Currently does not have logic to distribute cluster configuration, in next phase will have the load distribution in place
-func (sh *shardHandler) HandleLoadDistribution(ctx context.Context) error {
-	operatorIdentity := "0-1"
-	shardName := "shard-" + operatorIdentity
-
-	_, err := sh.Create(ctx, sh.config.Cache.ClusterCache, shardName, operatorIdentity)
-
-	if err != nil {
-		return err
-	}
-
-	return nil
 }
