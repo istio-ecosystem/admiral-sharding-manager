@@ -49,7 +49,7 @@ func createOptions(opts ...Options) *options {
 type Options func(*options)
 
 func NewServer(ctx context.Context, params *model.ShardingManagerParams, opts ...Options) (*server, error) {
-	client, err := getClients(params)
+	client, err := initClients(params)
 	if err != nil {
 		return nil, fmt.Errorf("failed setting up clients: %v", err)
 	}
@@ -72,7 +72,7 @@ func NewServer(ctx context.Context, params *model.ShardingManagerParams, opts ..
 	return httpServer, nil
 }
 
-func getClients(params *model.ShardingManagerParams) (model.Clients, error) {
+func initClients(params *model.ShardingManagerParams) (model.Clients, error) {
 	var client model.Clients
 	var kubeClient manager.LoadKubeClient = &manager.KubeClient{}
 	admiralAPIClient, err := kubeClient.LoadAdmiralApiClientFromPath(params.KubeconfigPath)
