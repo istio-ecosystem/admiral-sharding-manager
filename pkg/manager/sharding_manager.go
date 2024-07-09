@@ -48,12 +48,12 @@ func (sm *shardingManager) Start(ctx context.Context) error {
 }
 
 func (sm *shardingManager) pushShardConfiguration(ctx context.Context, config model.ShardingMangerCache) error {
-	_, err := sm.shardHandler.Create(ctx, config.ClusterCache, "identity", "operatorIdentity")
+	_, err := sm.shardHandler.Create(ctx, config.ClusterCache, sm.identity+"-"+"operatorIdentity", "operatorIdentity")
 	if err != nil {
 		logrus.Warnf("error creating shard: %v", err)
 		if errors.IsAlreadyExists(err) {
 			logrus.Info("shard already exists, updating it...")
-			_, err = sm.shardHandler.Update(ctx, config.ClusterCache, "identity", "operatorIdentity")
+			_, err = sm.shardHandler.Update(ctx, config.ClusterCache, sm.identity+"-"+"operatorIdentity", "operatorIdentity")
 			return err
 		}
 	}

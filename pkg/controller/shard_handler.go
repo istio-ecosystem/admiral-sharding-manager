@@ -3,10 +3,13 @@ package controller
 import (
 	"context"
 	"fmt"
+	"strings"
 
 	typeV1 "github.com/istio-ecosystem/admiral-api/pkg/apis/admiral/v1"
 	"github.com/istio-ecosystem/admiral-sharding-manager/pkg/model"
 	"github.com/istio-ecosystem/admiral-sharding-manager/pkg/registry"
+	"github.com/sirupsen/logrus"
+	"k8s.io/apimachinery/pkg/api/errors"
 
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
@@ -44,6 +47,14 @@ func (sh *shardHandler) Create(
 	clusterConfiguration []registry.ClusterConfig,
 	shardName string,
 	operatorIdentity string) (*typeV1.Shard, error) {
+
+	shardName = strings.ToLower(shardName)
+	_, err := sh.clients.AdmiralClient.Shards(sh.params.ShardNamespace).Get(ctx, shardName, metav1.GetOptions{})
+	logrus.Warnf("error getting shard: %v", err)
+	if errors.IsAlreadyExists(err) {
+		logrus.Warnf("shard=%s already exists, updating instead...", shardName)
+		return sh.Update(ctx, clusterConfiguration, shardName, operatorIdentity)
+	}
 	shardToCreate := buildShardResource(clusterConfiguration, sh.params, shardName, operatorIdentity)
 	return sh.clients.AdmiralClient.Shards(sh.params.ShardNamespace).Create(ctx, shardToCreate, metav1.CreateOptions{})
 }
@@ -53,6 +64,7 @@ func (sh *shardHandler) Update(
 	clusterConfiguration []registry.ClusterConfig,
 	shardName string,
 	operatorIdentity string) (*typeV1.Shard, error) {
+	shardName = strings.ToLower(shardName)
 	var updatedShard *typeV1.Shard
 	existingShard, err := sh.clients.AdmiralClient.Shards(sh.params.ShardNamespace).Get(ctx, shardName, metav1.GetOptions{})
 	shardToUpdate := buildShardResource(clusterConfiguration, sh.params, shardName, operatorIdentity)
@@ -78,7 +90,11 @@ func (sh *shardHandler) Delete(ctx context.Context, shard *typeV1.Shard) error {
 	return err
 }
 
-func buildShardResource(clusterConfigs []registry.ClusterConfig, smParam *model.ShardingManagerParams, shardName string, operatorIdentity string) *typeV1.Shard {
+func buildShardResource(
+	clusterConfigs []registry.ClusterConfig,
+	smParam *model.ShardingManagerParams,
+	shardName string,
+	operatorIdentity string) *typeV1.Shard {
 	var (
 		clusters []typeV1.ClusterShards
 		labels   = make(map[string]string)
